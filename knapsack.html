@@ -1,0 +1,2371 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>KNAPSACK</title>
+  <link rel="stylesheet" href="./main.css" type="text/css" media="screen, tv, print" charset="UTF-8" />
+</head>
+<body>
+
+
+
+<h2>EXTERNAL SYMBOLS</h2>
+
+<div class="symbol">
+  <ul>
+
+<li>
+  Class: <strong>knapsack-error</strong> inherits ((error))
+
+<dl>
+
+<dt><strong>knapsack</strong> Reader: knapsack</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(error knapsack-error) stream]
+
+
+</li>
+
+<li>
+  Function: <strong>knapsack-error</strong>
+[class &amp;rest args]
+
+
+</li>
+
+<li>
+  Class: <strong>transaction-conflict</strong> inherits ((knapsack-error))
+
+<dl>
+
+<dt><strong>transaction</strong> Reader: transaction</small></dt>
+
+
+<dt><strong>old-transaction</strong> Reader: old-transaction</small></dt>
+
+
+<dt><strong>object-id</strong> Reader: object-id</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(error transaction-conflict) stream]
+
+
+</li>
+
+<li>
+  Class: <strong>simple-knapsack-error</strong> inherits ((knapsack-error simple-error))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(error simple-knapsack-error) stream]
+
+
+</li>
+
+<li>
+  Function: <strong>simple-knapsack-error</strong>
+[format-string &amp;rest format-args]
+
+
+</li>
+
+<li>
+  Class: <strong>internal-knapsack-error</strong> inherits ((knapsack-error simple-error))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(error internal-knapsack-error) stream]
+
+
+</li>
+
+<li>
+  Function: <strong>internal-knapsack-error</strong>
+[format-string &amp;rest format-args]
+
+
+</li>
+
+<li>
+  Class: <strong>slot-error</strong> inherits ((knapsack-error))
+
+<dl>
+
+<dt><strong>object</strong> Reader: slot-error-object</small></dt>
+
+
+<dt><strong>slot-name</strong> Reader: slot-error-name</small></dt>
+
+
+<dt><strong>value</strong> Reader: slot-error-value</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>duplicate-slot-value</strong> inherits ((slot-error))
+
+<dl>
+
+<dt><strong>other-object</strong> Reader: slot-error-other-object</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(error duplicate-slot-value) stream]
+
+
+</li>
+
+<li>
+  Class: <strong>persistent-class</strong> inherits ((standard-class))
+
+<dl>
+
+<dt><strong>persistent-slots</strong> Accessor: class-persistent-slots</small></dt>
+
+
+<dt><strong>index</strong></small></dt><dd>Can be either NIL (for no class index) or T
+(for the standard class index).  Default value is NIL.</dd>
+
+
+<dt><strong>changed-p</strong> Accessor: class-changed-p</small></dt><dd>True iff the class definition was changed
+but the schemas haven't been updated yet.  This flag is necessary because
+some MOP implementations don't call FINALIZE-INHERITANCE when a class
+was redefined and a new instance of the redefined class is created.</dd>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>validate-superclass</strong>
+[(class standard-class) (superclass persistent-class)]
+
+
+</li>
+
+<li>
+  Method: <strong>validate-superclass</strong>
+[(class persistent-class) (superclass standard-class)]
+
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(class persistent-class) &amp;rest args &amp;key direct-superclasses &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>reinitialize-instance</strong>
+[(class persistent-class) &amp;rest args &amp;key direct-superclasses &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>finalize-inheritance</strong>
+[(class persistent-class)]
+
+
+</li>
+
+<li>
+  Method: <strong>direct-slot-definition-class</strong>
+[(class persistent-class) &amp;rest initargs]
+
+
+</li>
+
+<li>
+  Method: <strong>effective-slot-definition-class</strong>
+[(class persistent-class) &amp;rest initargs]
+
+
+</li>
+
+<li>
+  Method: <strong>compute-effective-slot-definition</strong>
+[(class persistent-class) slot-name direct-slot-definitions]
+
+
+</li>
+
+<li>
+  Generic: <strong>heap-stream</strong>
+[heap]
+
+<pre>
+  Returns the heap's stream.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>heap-end</strong>
+[heap]
+
+<pre>
+  Returns the end of the heap.
+</pre>
+
+
+</li>
+
+<li>
+  Class: <strong>heap</strong> inherits ((standard-object))
+
+<dl>
+
+<dt><strong>stream</strong> Accessor: heap-stream</small></dt>
+
+
+<dt><strong>cell-buffer</strong> Reader: cell-buffer</small></dt>
+
+
+<dt><strong>end</strong> Accessor: heap-end</small></dt><dd>The end of the heap.  For free-list heaps, this number
+is stored in the first heap cell. For appending heaps, it's stored in the
+end of the file.</dd>
+
+
+<dt><strong>max-size</strong> Accessor: max-heap-size</small></dt><dd>The maximum size (in octets) for the heap.
+If nil, the heap is allowed to expand indefinitely.</dd>
+
+
+<dt><strong>nr-allocated-octets</strong> Accessor: nr-allocated-octets</small></dt><dd>The number of octets that have been
+allocated by ALLOCATE-BLOCK since the last time that RESET-ALLOCATION-COUNTER
+was called.</dd>
+
+
+</dl>
+
+</li>
+
+<li>
+  Function: <strong>open-heap</strong>
+[pathname &amp;key (class (quote heap)) knapsack (options (quote nil)) (if-exists :overwrite) (if-does-not-exist :create)]
+
+
+</li>
+
+<li>
+  Method: <strong>close-heap</strong>
+[(heap heap)]
+
+
+</li>
+
+<li>
+  Class: <strong>free-list-heap</strong> inherits ((heap))
+
+<pre>
+  This heap uses a 'segregated free list' system: the
+first list contains 16-octet blocks (including the header), the second
+list contains 32-octet blocks, the third has 64-octet blocks, etc.  When
+there are N free lists, the last is for blocks of 16*2^(N-1) octets.
+
+Each block starts with an 8-octet header.  If a block is in use, the
+header contains the block's size.  If a block is still free, the header
+contains a pointer to the next block on the same free list.
+</pre>
+
+<dl>
+
+<dt><strong>nr-free-lists</strong> Reader: nr-free-lists</small></dt>
+
+
+<dt><strong>starts</strong></small></dt><dd>An array with the starts of each free-list.  This
+is an in-memory version of the array that's in the beginning of the heap.</dd>
+
+
+<dt><strong>min-block-size</strong> Reader: min-block-size</small></dt><dd>The size of the smallest blocks.  This must
+be a power of 2.</dd>
+
+
+<dt><strong>expansion-size</strong> Reader: expansion-size</small></dt><dd>The minimum number of bytes that will be
+used to expand a free-list.</dd>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(heap free-list-heap) &amp;key &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Class: <strong>simple-free-list-heap</strong> inherits ((free-list-heap))
+
+<pre>
+  All blocks in a simple free list heap have the same size.
+</pre>
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(schema schema) stream]
+
+
+</li>
+
+<li>
+  Class: <strong>mark-and-sweep-heap</strong> inherits ((garbage-collector free-list-heap serializer))
+
+<dl>
+
+<dt><strong>nr-object-bytes-marked</strong> Accessor: nr-object-bytes-marked</small></dt>
+
+
+<dt><strong>nr-heap-bytes-scanned</strong> Accessor: nr-heap-bytes-scanned</small></dt>
+
+
+<dt><strong>nr-heap-bytes-sweeped</strong> Accessor: nr-heap-bytes-sweeped</small></dt>
+
+
+<dt><strong>nr-object-bytes-sweeped</strong> Accessor: nr-object-bytes-sweeped</small></dt>
+
+
+<dt><strong>max-heap-end</strong> Accessor: max-heap-end</small></dt><dd>The maximum acceptable value for heap-end
+during the current garbage collection.</dd>
+
+
+<dt><strong>grow-size</strong> Accessor: grow-size</small></dt><dd>Specifies a minimum amount to grow the heap when it needs to grow.
+If 'grow size' is an integer, the expected growth rate is additive and
+the integer is the number of octets to add; if it is a float, the
+expected growth rate for the heap is multiplicative and the float is
+the ratio of the new size to the old size.  (The actual size might be
+rounded up.)</dd>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(heap mark-and-sweep-heap) &amp;key size &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>close-heap</strong>
+[(heap mark-and-sweep-heap)]
+
+
+</li>
+
+<li>
+  Generic: <strong>close-cache</strong>
+[cache &amp;key commit]
+
+<pre>
+  Closes the cache.  If COMMIT is true (which is the
+default), the objects in the cache will be written to disk before
+closing the cache.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>cache-size</strong>
+[cache]
+
+<pre>
+  Returns the number of non-dirty objects that the
+cache may keep in memory.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>cache-count</strong>
+[cache]
+
+<pre>
+  Returns the number of objects (both dirty and
+non-dirty) in the cache.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>cache-create-object</strong>
+[object cache]
+
+<pre>
+  Adds a new object to the cache and returns an
+object id that can be used to retrieve the object from the cache.
+Don't use this function twice for the same object.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>cache-get-object</strong>
+[object-id cache]
+
+<pre>
+  Retrieves the object with the given id from the
+cache and returns that object.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>cache-commit</strong>
+[cache]
+
+<pre>
+  Makes sure that all changes to the cache are
+written to disk.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>cache-rollback</strong>
+[cache]
+
+<pre>
+  Undoes all cache changes that were made since the
+last cache-commit.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>cache-recover</strong>
+[cache]
+
+<pre>
+  Undoes partially committed transactions to ensure
+that the cache is in a consistent state.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>open-transaction</strong>
+[cache transaction]
+
+<pre>
+  Adds a transaction to the set of open
+transactions.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>close-transaction</strong>
+[cache transaction]
+
+<pre>
+  Removes a transaction from the set of open
+transactions.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>map-transactions</strong>
+[cache function]
+
+<pre>
+  Applies a function to each open transaction in a
+cache.
+</pre>
+
+
+</li>
+
+<li>
+  Class: <strong>cache</strong> inherits ((standard-object))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>standard-cache</strong> inherits ((cache))
+
+<dl>
+
+<dt><strong>heap</strong> Reader: heap</small></dt>
+
+
+<dt><strong>schema-table</strong> Reader: schema-table</small></dt>
+
+
+<dt><strong>knapsack</strong> Reader: knapsack</small></dt><dd>Back pointer to the knapsack.</dd>
+
+
+<dt><strong>objects</strong> Reader: objects</small></dt><dd>A hash-table (from id to object)
+containing the youngest committed version of all objects that are
+currently kept in memory but are not dirty.  ('The youngest version'
+means the version belonging to the youngest committed transaction.)</dd>
+
+
+<dt><strong>queue</strong> Reader: queue</small></dt><dd>A queue of the ids of all non-dirty objects
+that are currently in the cache memory.  Whenever an object is
+retrieved (i.e. read), it's added to the queue.  If an object-id is
+in this queue, it is not necessarily in the OBJECTS hash-table.</dd>
+
+
+<dt><strong>last-timestamp</strong> Accessor: last-timestamp</small></dt>
+
+
+<dt><strong>transaction-id-helper</strong> Accessor: transaction-id-helper</small></dt>
+
+
+<dt><strong>transactions</strong> Reader: transactions</small></dt><dd>A mapping from transaction ids to
+transactions.  Contains only open transactions, i.e. transactions that
+haven't been rolled back or committed.</dd>
+
+
+<dt><strong>size</strong> Accessor: cache-size</small></dt><dd>The maximum number of non-dirty objects that
+will be kept in the cache memory.</dd>
+
+
+<dt><strong>shrink-ratio</strong> Accessor: cache-shrink-ratio</small></dt><dd>A number between 0 and 1.  When the
+cache is full, i.e. when there are at least SIZE (non-dirty) objects
+in the queue, it will be shrunk by removing (1 - SHRINK-RATIO) * SIZE
+objects.</dd>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(cache standard-cache) stream]
+
+
+</li>
+
+<li>
+  Function: <strong>open-cache</strong>
+[directory &amp;rest args &amp;key (class (quote standard-cache)) &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>close-cache</strong>
+[(cache standard-cache) &amp;key (commit t)]
+
+
+</li>
+
+<li>
+  Macro: <strong>with-cache</strong>
+[(cache directory &amp;rest options) &amp;body body]
+
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(cache standard-cache) &amp;key directory (heap-class (quote mark-and-sweep-heap)) (heap-options (quote nil)) (if-exists :overwrite) (if-does-not-exist :create) (size 100000) &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>cache-count</strong>
+[(cache standard-cache)]
+
+
+</li>
+
+<li>
+  Method: <strong>cache-create-object</strong>
+[object (cache standard-cache)]
+
+
+</li>
+
+<li>
+  Method: <strong>cache-touch-object</strong>
+[object (cache standard-cache)]
+
+<pre>
+  Checks for transaction conflicts and signals a transaction conflict
+if necessary.  Change the object's status to dirty.  If the object is
+already dirty, nothing happens.
+</pre>
+
+
+</li>
+
+<li>
+  Method: <strong>cache-get-object</strong>
+[object-id (cache standard-cache)]
+
+
+</li>
+
+<li>
+  Method: <strong>open-transaction</strong>
+[(cache standard-cache) transaction]
+
+
+</li>
+
+<li>
+  Method: <strong>close-transaction</strong>
+[(cache standard-cache) transaction]
+
+
+</li>
+
+<li>
+  Method: <strong>map-transactions</strong>
+[(cache standard-cache) function]
+
+
+</li>
+
+<li>
+  Method: <strong>cache-rollback</strong>
+[(cache standard-cache)]
+
+
+</li>
+
+<li>
+  Method: <strong>cache-commit</strong>
+[(cache standard-cache)]
+
+
+</li>
+
+<li>
+  Method: <strong>cache-recover</strong>
+[(cache standard-cache)]
+
+
+</li>
+
+<li>
+  Variable: <strong>*knapsack*</strong>
+
+
+</li>
+
+<li>
+  Function: <strong>current-knapsack</strong>
+[]
+
+
+</li>
+
+<li>
+  Generic: <strong>object-id</strong>
+[object]
+
+<pre>
+  Returns the object id of a persistent-object or
+persistent-data.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>p-eql</strong>
+[x y]
+
+<pre>
+  The persistent equivalent of EQL.
+</pre>
+
+
+</li>
+
+<li>
+  Method: <strong>p-eql</strong>
+[a b]
+
+
+</li>
+
+<li>
+  Function: <strong>cache</strong>
+[object]
+
+
+</li>
+
+<li>
+  Class: <strong>persistent-data</strong> inherits ((standard-object))
+
+<pre>
+  PERSISTENT-DATA classes do not have PERSISTENT-CLASS as metaclass
+because we don't want to specialize SLOT-VALUE-USING-CLASS & friends
+for persistent-data instances.  Their contents are accessed by special
+functions like P-CAR instead.
+</pre>
+
+<dl>
+
+<dt><strong>object-id</strong> Reader: object-id</small></dt>
+
+
+<dt><strong>transaction-id</strong> Reader: transaction-id</small></dt>
+
+
+<dt><strong>knapsack</strong> Reader: knapsack</small></dt>
+
+
+<dt><strong>contents</strong> Accessor: contents</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(object persistent-data) stream]
+
+
+</li>
+
+<li>
+  Method: <strong>p-eql</strong>
+[(a persistent-data) (b persistent-data)]
+
+
+</li>
+
+<li>
+  Class: <strong>persistent-array</strong> inherits ((persistent-data))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Function: <strong>p-make-array</strong>
+[dimensions &amp;rest options &amp;key &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>p-aref</strong>
+[(array persistent-array) &amp;rest indices]
+
+
+</li>
+
+<li>
+  Method: <strong>p-array-dimensions</strong>
+[(array persistent-array)]
+
+
+</li>
+
+<li>
+  Class: <strong>persistent-cons</strong> inherits ((persistent-data))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Function: <strong>p-cons</strong>
+[car cdr]
+
+
+</li>
+
+<li>
+  Method: <strong>p-car</strong>
+[(cons persistent-cons)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-car</strong>
+[(x (eql nil))]
+
+
+</li>
+
+<li>
+  Method: <strong>p-cdr</strong>
+[(cons persistent-cons)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-cdr</strong>
+[(x (eql nil))]
+
+
+</li>
+
+<li>
+  Function: <strong>p-list</strong>
+[&amp;rest objects]
+
+
+</li>
+
+<li>
+  Function: <strong>unwrap-persistent-list</strong>
+[list]
+
+<pre>
+  Converts a persistent list to a 'normal' Lisp list.
+</pre>
+
+
+</li>
+
+<li>
+  Function: <strong>p-caar</strong>
+[object]
+
+<pre>
+  The persistent equivalent of CAAR.
+</pre>
+
+
+</li>
+
+<li>
+  Function: <strong>p-cadr</strong>
+[object]
+
+<pre>
+  The persistent equivalenet of CADR.
+</pre>
+
+
+</li>
+
+<li>
+  Function: <strong>p-cdar</strong>
+[object]
+
+<pre>
+  The persistent equivalent of CDAR.
+</pre>
+
+
+</li>
+
+<li>
+  Function: <strong>p-cddr</strong>
+[object]
+
+<pre>
+  The persistent equivalent of CDDR.
+</pre>
+
+
+</li>
+
+<li>
+  Method: <strong>p-consp</strong>
+[(object persistent-cons)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-consp</strong>
+[(object t)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-endp</strong>
+[(object (eql nil))]
+
+
+</li>
+
+<li>
+  Method: <strong>p-endp</strong>
+[(object persistent-cons)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-endp</strong>
+[(object t)]
+
+
+</li>
+
+<li>
+  Function: <strong>p-last</strong>
+[list &amp;optional (n 1)]
+
+<pre>
+  Returns the last persistent cons cell of a persistent list (or
+NIL if the list is empty).
+</pre>
+
+
+</li>
+
+<li>
+  Function: <strong>p-mapcar</strong>
+[function list]
+
+
+</li>
+
+<li>
+  Function: <strong>p-mapc</strong>
+[function list]
+
+
+</li>
+
+<li>
+  Function: <strong>p-maplist</strong>
+[function list]
+
+
+</li>
+
+<li>
+  Function: <strong>p-mapl</strong>
+[function list]
+
+
+</li>
+
+<li>
+  Function: <strong>p-member-if</strong>
+[predicate list &amp;key key]
+
+
+</li>
+
+<li>
+  Macro: <strong>p-pop</strong>
+[place &amp;environment env]
+
+<pre>
+  Pop an item from the persistent list specified by PLACE.
+</pre>
+
+
+</li>
+
+<li>
+  Macro: <strong>p-push</strong>
+[item place &amp;environment env]
+
+<pre>
+  Push ITEM onto the persistent list specified by PLACE.  Return the
+modified persistent list. ITEM is evaluated before place.
+</pre>
+
+
+</li>
+
+<li>
+  Method: <strong>p-length</strong>
+[(vector persistent-array)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-length</strong>
+[(list persistent-cons)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-find</strong>
+[value (vector persistent-array) &amp;key (key (function identity)) (test (function p-eql)) (start 0) (end nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-find</strong>
+[value (list persistent-cons) &amp;key (key (function identity)) (test (function p-eql)) (start 0) (end nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-find</strong>
+[value (list (eql nil)) &amp;key &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>p-position</strong>
+[value (vector persistent-array) &amp;key (key (function identity)) (test (function p-eql)) (start 0) (end nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-position</strong>
+[value (list persistent-cons) &amp;key (key (function identity)) (test (function p-eql)) (start 0) (end nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-replace</strong>
+[(vector-1 persistent-array) (vector-2 persistent-array) &amp;key (start1 0) end1 (start2 0) end2]
+
+
+</li>
+
+<li>
+  Method: <strong>p-delete-if</strong>
+[test (list persistent-cons) &amp;key (from-end nil) (start 0) end count key]
+
+
+</li>
+
+<li>
+  Class: <strong>persistent-object</strong> inherits ((standard-object))
+
+<pre>
+  Classes of metaclass PERSISTENT-CLASS automatically
+inherit from this class.
+</pre>
+
+<dl>
+
+<dt><strong>object-id</strong> Reader: object-id</small></dt>
+
+
+<dt><strong>transaction-id</strong> Reader: transaction-id</small></dt>
+
+
+<dt><strong>knapsack</strong> Reader: knapsack</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(object persistent-object) &amp;rest args &amp;key knapsack (dont-index nil) &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(object persistent-object) stream]
+
+
+</li>
+
+<li>
+  Method: <strong>p-eql</strong>
+[(a persistent-object) (b persistent-object)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-eql</strong>
+[(a persistent-data) (b persistent-object)]
+
+
+</li>
+
+<li>
+  Method: <strong>p-eql</strong>
+[(a persistent-object) (b persistent-data)]
+
+
+</li>
+
+<li>
+  Method: <strong>slot-value-using-class</strong>
+[(class persistent-class) object slot]
+
+
+</li>
+
+<li>
+  Method: <strong>slot-makunbound-using-class</strong>
+[(class persistent-class) object slot-name-or-def]
+
+
+</li>
+
+<li>
+  Generic: <strong>update-persistent-instance-for-redefined-class</strong>
+[instance added-slots discarded-slots property-list &amp;key]
+
+
+</li>
+
+<li>
+  Method: <strong>update-persistent-instance-for-redefined-class</strong>
+[(instance persistent-object) added-slots discarded-slots plist &amp;key]
+
+
+</li>
+
+<li>
+  Method: <strong>update-instance-for-redefined-class</strong>
+[(object persistent-object) added-slots discarded-slots plist &amp;rest initargs &amp;key]
+
+
+</li>
+
+<li>
+  Generic: <strong>btree-nr-keys</strong>
+[btree]
+
+<pre>
+  Returns the number of keys in a btree.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>btree-nr-values</strong>
+[btree]
+
+<pre>
+  Returns the number of values in a btree.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>btree-search</strong>
+[btree key &amp;key errorp default-value]
+
+<pre>
+  Returns the value (or persistent list of values, for btrees that
+don't have unique keys) associated with KEY.  If the btree has
+non-unique keys and no value is found, the empty list is returned.  If
+the btree has unique keys and no value is found, the result depends on
+the ERRORP option: if ERRORP is true, a btree-search-error is
+signalled; otherwise, DEFAULT-VALUE is returned.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>btree-insert</strong>
+[btree key value &amp;key if-exists]
+
+<pre>
+  Adds an association from KEY to VALUE to a btree.
+
+IF-EXISTS can be either :OVERWRITE (default) or :ERROR.
+
+If the btree has unique keys (see BTREE-UNIQUE-KEYS-P) and KEY is
+already associated with another (according to BTREE-VALUE=) value, the
+result depends on the IF-EXISTS option: if IF-EXISTS is :OVERWRITE,
+the old value is overwriten; if IF-EXISTS is :ERROR, a
+BTREE-KEY-ALREADY-PRESENT-ERROR is signaled.
+
+For btrees with non-unique keys, the IF-EXISTS option is ignored and
+VALUE is just added to the list of values associated with KEY (unless
+VALUE is already associated with KEY; in that case nothing
+happens).
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>btree-delete</strong>
+[btree key value &amp;key if-does-not-exist]
+
+<pre>
+  Removes an association from KEY to VALUE from a btree.
+IF-DOES-NOT-EXIST can be either :IGNORE (default) or :ERROR.
+If there is no association from KEY to VALUE and IF-DOES-NOT-EXIST
+is :ERROR, a BTREE-DELETION-ERROR is signaled.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>btree-delete-key</strong>
+[btree key &amp;key if-does-not-exist]
+
+<pre>
+  Removes KEY and all associated values from a btree.
+IF-DOES-NOT-EXIST can be either :IGNORE (default) or :ERROR.
+
+For a btree with unique-keys that contains a value for KEY, this
+operation is identical to
+
+  (btree-delete btree key (btree-search btree key))
+
+For a btree with non-unique keys, it's identical to
+
+  (dolist (value (unwrap-persistent-list (btree-search btree key)))
+    (btree-delete btree key value))
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>map-btree</strong>
+[btree function &amp;key min max include-min include-max order]
+
+<pre>
+  Calls FUNCTION for all key/value associations in the btree where
+key is in the specified interval (this means that FUNCTION can be
+called with the same key more than once for btrees with non-unique
+keys). FUNCTION must be a binary function; the first argument is the
+btree key, the second argument is an associated value.
+
+MIN, MAX, INCLUDE-MIN and INCLUDE-MAX specify the interval.  The
+interval is left-open if MIN is nil, right-open if MAX is nil.  The
+interval is inclusive on the left if INCLUDE-MIN is true (and
+exclusive on the left otherwise).  The interval is inclusive on the
+right if INCLUDE-MAX is true (and exclusive on the right otherwise).
+
+ORDER is either :ASCENDING (default) or :DESCENDING.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>map-btree-keys</strong>
+[btree function &amp;key min max include-min include-max order]
+
+<pre>
+  Calls FUNCTION for all keys in the btree where key is in the
+specified interval. FUNCTION must be a binary function; the first
+argument is the btree key, the second argument is the btree value (or
+persistent list of values, for btrees with non-unique keys).  FUNCTION
+will be called exactly once for each key in the btree.
+
+MIN, MAX, INCLUDE-MIN and INCLUDE-MAX specify the interval.  The
+interval is left-open if MIN is nil, right-open if MAX is nil.  The
+interval is inclusive on the left if INCLUDE-MIN is true (and
+exclusive on the left otherwise).  The interval is inclusive on the
+right if INCLUDE-MAX is true (and exclusive on the right otherwise).
+
+ORDER is either :ASCENDING (default) or :DESCENDING.
+</pre>
+
+
+</li>
+
+<li>
+  Class: <strong>btree-error</strong> inherits ((error))
+
+<dl>
+
+<dt><strong>btree</strong> Reader: btree-error-btree</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>btree-search-error</strong> inherits ((btree-error))
+
+<dl>
+
+<dt><strong>key</strong> Reader: btree-error-key</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>btree-insertion-error</strong> inherits ((btree-error))
+
+<dl>
+
+<dt><strong>key</strong> Reader: btree-error-key</small></dt>
+
+
+<dt><strong>value</strong> Reader: btree-error-value</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>btree-key-already-present-error</strong> inherits ((btree-insertion-error))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>btree-type-error</strong> inherits ((btree-error type-error))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>btree</strong> inherits ((persistent-object))
+
+<dl>
+
+<dt><strong>key<</strong></small></dt>
+
+
+<dt><strong>value=</strong></small></dt><dd>This is only used for btrees with non-unique keys.</dd>
+
+
+<dt><strong>key-key</strong> Reader: btree-key-key</small></dt><dd>A unary function that is applied to a
+btree key before comparing it to another key with a key comparison
+predicate like BTREE-KEY<.</dd>
+
+
+<dt><strong>value-key</strong> Reader: btree-value-key</small></dt><dd>A unary function that is applied to a
+btree value before comparing it to another value with the BTREE-VALUE=
+predicate.</dd>
+
+
+<dt><strong>node-class</strong> Reader: btree-node-class</small></dt>
+
+
+<dt><strong>max-node-size</strong> Reader: btree-max-node-size</small></dt><dd>An integer specifying the preferred
+maximum number of keys per btree node.</dd>
+
+
+<dt><strong>unique-keys-p</strong> Reader: btree-unique-keys-p</small></dt><dd>If false, one key can correspond to more than one value.
+In that case, the values are assumed to be objects for which the function
+OBJECT-ID is defined (and returns a unique integer).</dd>
+
+
+<dt><strong>key-type</strong> Reader: btree-key-type</small></dt><dd>The type of all keys.</dd>
+
+
+<dt><strong>value-type</strong> Reader: btree-value-type</small></dt><dd>The type of all values.</dd>
+
+
+<dt><strong>root</strong> Accessor: btree-root</small></dt>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(btree btree) &amp;rest initargs &amp;key key&lt; key-key value= value-key &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-key<</strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-key=</strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-key>=</strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-key<=</strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-key></strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-value=</strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(node bnode) &amp;key btree &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(node bnode) stream]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-nr-keys</strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-nr-values</strong>
+[(btree btree)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-search</strong>
+[btree key &amp;key (errorp t) (default-value nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-insert</strong>
+[(btree btree) key value &amp;key (if-exists :overwrite)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-delete</strong>
+[(btree btree) key value &amp;key (if-does-not-exist :ignore)]
+
+
+</li>
+
+<li>
+  Method: <strong>btree-delete-key</strong>
+[(btree btree) key &amp;key (if-does-not-exist :ignore)]
+
+
+</li>
+
+<li>
+  Method: <strong>map-btree</strong>
+[(btree btree) function &amp;key min max include-min include-max (order :ascending)]
+
+
+</li>
+
+<li>
+  Method: <strong>map-btree-keys</strong>
+[(btree btree) function &amp;key min max include-min include-max (order :ascending)]
+
+
+</li>
+
+<li>
+  Generic: <strong>map-index</strong>
+[index function &amp;key equal min max include-min include-max order]
+
+<pre>
+  Calls FUNCTION for all key/value pairs in the btree
+where key is in the specified interval. FUNCTION must be a binary
+function; the first argument is the index key, the second argument is
+the index value (or list of values, for indexes with non-unique keys).
+
+If EQUAL is specified, the other arguments are ignored; the function
+will be called once (if there is a key with the same value as EQUAL)
+or not at all (if there is no such key).
+
+MIN, MAX, INCLUDE-MIN and INCLUDE-MAX specify the interval.  The
+interval is left-open if MIN is nil, right-open if MAX is nil.  The
+interval is inclusive on the left if INCLUDE-MIN is true (and
+exclusive on the left otherwise).  The interval is inclusive on the
+right if INCLUDE-MAX is true (and exclusive on the right otherwise).
+
+ORDER is either :ASCENDING (default) or :DESCENDING.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>index-insert</strong>
+[index key value &amp;key if-exists]
+
+<pre>
+  Insert a key/value pair into an index.  IF-EXISTS can be either
+:OVERWRITE (default) or :ERROR.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>index-delete</strong>
+[index key value &amp;key if-does-not-exist]
+
+<pre>
+  Remove a key/value pair from an index.  IF-DOES-NOT-EXIST can be
+either :IGNORE (default) or :ERROR.
+</pre>
+
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(index index) stream]
+
+
+</li>
+
+<li>
+  Method: <strong>map-index</strong>
+[(index index) function &amp;rest args &amp;key min max include-min include-max (equal nil) (order :ascending)]
+
+
+</li>
+
+<li>
+  Method: <strong>index-insert</strong>
+[(index index) key value &amp;key (if-exists :overwrite)]
+
+
+</li>
+
+<li>
+  Method: <strong>index-delete</strong>
+[(index index) key value &amp;key (if-does-not-exist :ignore)]
+
+
+</li>
+
+<li>
+  Function: <strong>make-index</strong>
+[index-spec unique-keys-p &amp;key (class (quote index))]
+
+
+</li>
+
+<li>
+  Function: <strong>define-index-spec</strong>
+[name spec &amp;key (if-exists :overwrite)]
+
+<pre>
+  NAME must be a keyword.  SPEC must be an index spec.  IF-EXISTS must be
+either :OVERWRITE (default) or :ERROR.
+</pre>
+
+
+</li>
+
+<li>
+  Function: <strong>find-index-spec</strong>
+[name &amp;key (errorp t)]
+
+
+</li>
+
+<li>
+  Generic: <strong>add-knapsack-root</strong>
+[object knapsack]
+
+<pre>
+  Adds an object to the root set of a knapsack.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>map-knapsack-roots</strong>
+[function knapsack]
+
+<pre>
+  Applies a function to all objects in the root set of a knapsack.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-roots</strong>
+[knapsack]
+
+<pre>
+  Returns a list with all objects in the root set of a knapsack.  You
+shouldn't modify this list.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-cache</strong>
+[knapsack]
+
+<pre>
+  Returns the cache for a knapsack.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-directory</strong>
+[knapsack]
+
+<pre>
+  Returns a pathname for the directory that contains all files of a
+knapsack.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-commit</strong>
+[knapsack]
+
+<pre>
+  Ensures that all in-memory data is saved to disk.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-rollback</strong>
+[knapsack]
+
+<pre>
+  ....
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-add-class-index</strong>
+[knapsack class-designator &amp;key errorp]
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-remove-class-index</strong>
+[knapsack class-designator &amp;key errorp]
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-class-index</strong>
+[knapsack class-designator &amp;key errorp]
+
+<pre>
+  Returns the class index for a class designator.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-map-class-indexes</strong>
+[knapsack function]
+
+<pre>
+  FUNCTION must take two arguments: a class name and a class index.
+It is called for all class indexes in the specified knapsack.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-make-class-index</strong>
+[knapsack class &amp;key index-spec]
+
+<pre>
+  Creates a new class index and returns that index.  INDEX-SPEC
+specifies the kind of index that must be created (if not supplied, the
+knapsack's default class index spec will be used.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-add-slot-index</strong>
+[knapsack class-designator slot index-spec unique-p &amp;key errorp]
+
+<pre>
+  Creates a new slot index for the slot designated by
+CLASS-DESIGNATOR and SLOT.  The type of index is specified by
+INDEX-SPEC.  Returns the new index.  Signals an error if ERRORP is T
+and there already is an index for the designated slot.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-remove-slot-index</strong>
+[knapsack class-designator slot &amp;key errorp]
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-slot-index</strong>
+[knapsack class-designator slot &amp;key errorp include-superclasses]
+
+<pre>
+  Returns the slot index for the slot specified by CLASS-DESIGNATOR
+and SLOT.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-map-slot-indexes</strong>
+[knapsack function &amp;key class include-subclasses]
+
+<pre>
+  FUNCTION must take three arguments: a class name, a slot name and
+a slot index.  It is called for all slot indexes in the specified
+knapsack.
+  CLASS defaults to T, meaning all classes.
+  INCLUDE-SUBCLASSES defaults to T.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-maybe-index-changed-slot</strong>
+[knapsack class object slot old-value new-value old-boundp new-boundp]
+
+<pre>
+  This function is called after a slot has changed.  OLD-VALUE is the
+slot's value before the change, NEW-VALUE is the current value.
+OLD-BOUNDP is true iff the slot was bound before the change,
+NEW-BOUNDP is true iff the slot is currently bound.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-maybe-index-new-object</strong>
+[knapsack class-designator object]
+
+<pre>
+  Adds the object id of OBJECT to the class index for the class
+designated by CLASS-DESIGNATOR.  If there is no such class index, it
+does nothing.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-map-class</strong>
+[knapsack class function &amp;key id-only include-subclasses]
+
+<pre>
+    FUNCTION is a unary function that gets called for all instances of
+the specified class.  Unindexed classes (i.e. classes for which the
+:indexed class option is nil) will be skipped.
+  If ID-ONLY is T (default is NIL), the function will be called with
+object ids instead of 'real' objects.  This can be handy if you want to
+do more filtering before actually loading objects from disk.
+  INCLUDE-SUBCLASSES defaults to T.
+</pre>
+
+
+</li>
+
+<li>
+  Macro: <strong>knapsack-do-class</strong>
+[(instance-var class &amp;key (knapsack (quote *knapsack*)) id-only (include-subclasses t)) &amp;body body]
+
+<pre>
+  Evaluate BODY for each instance of CLASS, with INSTANCE-VAR
+successively bound to each instance.  See the documentation of
+KNAPSACK-MAP-CLASS for more details.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-map-slot</strong>
+[knapsack class slot function &amp;key equal min max include-min include-max order include-subclasses]
+
+<pre>
+   FUNCTION is a unary function that gets called for all instances of
+the specified class that have a slot value matching the EQUAL, MIN,
+MAX INCLUDE-MIN and INCLUDE-MAX arguments (see the documentation of
+MAP-INDEX for a description of these arguments).
+  ORDER can be either :ASCENDING (default) or :DESCENDING; currently,
+the specified order will be respected for instances of one class but
+not across subclasses.
+  If ID-ONLY is T (default is NIL), the function will be called with
+object ids instead of 'real' objects.  This can be handy if you want to
+do more filtering before actually loading objects from disk.
+  INCLUDE-SUBCLASSES defaults to T.
+</pre>
+
+
+</li>
+
+<li>
+  Macro: <strong>knapsack-do-slot</strong>
+[(instance-var class slot &amp;rest args &amp;key (knapsack (quote *knapsack*)) equal min max include-min include-max order include-subclasses) &amp;body body]
+
+<pre>
+  Evaluate BODY for each instance of CLASS where SLOT has the
+specified value. INSTANCE-VAR will be bound successively to each
+instance.  See the documentation of KNAPSACK-MAP-SLOT for more
+details.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>knapsack-delete-object</strong>
+[knapsack object]
+
+<pre>
+  Removes OBJECT from KNAPSACK, i.e. removes object from the
+knapsack roots (if it is a root) and from all class and slot indexes
+in which it appears.
+</pre>
+
+
+</li>
+
+<li>
+  Variable: <strong>*transaction*</strong>
+
+
+</li>
+
+<li>
+  Macro: <strong>with-transaction</strong>
+[(&amp;rest args &amp;key (knapsack (quote (current-knapsack))) (inhibit-gc nil inhibit-gc-supplied-p) &amp;allow-other-keys) &amp;body body]
+
+
+</li>
+
+<li>
+  Class: <strong>knapsack</strong> inherits ((standard-object))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>standard-knapsack</strong> inherits ((knapsack))
+
+<dl>
+
+<dt><strong>cache</strong> Reader: knapsack-cache</small></dt>
+
+
+<dt><strong>directory</strong> Reader: knapsack-directory</small></dt>
+
+
+<dt><strong>roots</strong></small></dt><dd>A list with the object ids of all root
+objects, i.e.  the objects from which the garbage collector can reach
+all live objects.</dd>
+
+
+<dt><strong>roots-changed-p</strong> Accessor: roots-changed-p</small></dt>
+
+
+<dt><strong>highest-transaction-id</strong> Accessor: highest-transaction-id</small></dt><dd>The highest transaction ID
+in the entire knapsack.  This is saved together with the roots.</dd>
+
+
+<dt><strong>class-index-table</strong></small></dt><dd>The object id of a btree mapping class names to
+class indexes.  Each class index contains the ids of all instances
+from a class; it maps object ids to objects.</dd>
+
+
+<dt><strong>slot-index-tables</strong></small></dt><dd>The object id of a btree mapping class names to
+slot index tables, where each slot index table is a btree mapping slot
+names to slot indexes.  Each slot index maps slot values to
+objects.</dd>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(knapsack knapsack) stream]
+
+
+</li>
+
+<li>
+  Method: <strong>initialize-instance</strong>
+[(knapsack standard-knapsack) &amp;key (cache-class (quote lazy-cache)) (cache-args (quote nil)) &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>add-knapsack-root</strong>
+[object (knapsack standard-knapsack)]
+
+
+</li>
+
+<li>
+  Method: <strong>map-knapsack-roots</strong>
+[function (knapsack standard-knapsack)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-roots</strong>
+[(knapsack standard-knapsack)]
+
+
+</li>
+
+<li>
+  Function: <strong>open-knapsack</strong>
+[directory-designator &amp;rest args &amp;key (class (quote serial-transaction-knapsack)) (if-exists :overwrite) (if-does-not-exist :create) (cache-class (quote lazy-cache)) (cache-args (quote nil)) &amp;allow-other-keys]
+
+<pre>
+  Opens the knapsack in the directory designated by DIRECTORY-DESIGNATOR.
+  :IF-DOES-NOT-EXIST can be either :CREATE (creates a new knapsack if the
+it does not exist; this is the default) or :ERROR (signals an error if
+the knapsack does not exist).
+  :IF-EXISTS can be either :OVERWRITE (loads the knapsack if it exists;
+this is the default), :SUPERSEDE (deletes the existing knapsack and creates
+a new empty knapsack) or :ERROR (signals an error if the knapsack exists).
+</pre>
+
+
+</li>
+
+<li>
+  Function: <strong>close-knapsack</strong>
+[knapsack &amp;key (commit t)]
+
+
+</li>
+
+<li>
+  Function: <strong>commit</strong>
+[&amp;key (knapsack (current-knapsack))]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-commit</strong>
+[(knapsack standard-knapsack)]
+
+
+</li>
+
+<li>
+  Function: <strong>rollback</strong>
+[&amp;key (knapsack (current-knapsack))]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-rollback</strong>
+[(knapsack standard-knapsack)]
+
+
+</li>
+
+<li>
+  Macro: <strong>with-knapsack</strong>
+[(knapsack directory &amp;rest args) &amp;body body]
+
+
+</li>
+
+<li>
+  Function: <strong>add-class-index</strong>
+[class-designator &amp;key errorp]
+
+
+</li>
+
+<li>
+  Function: <strong>add-slot-index</strong>
+[class-designator slot index-spec &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Function: <strong>remove-class-index</strong>
+[class-designator &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Function: <strong>remove-slot-index</strong>
+[class-designator slot &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Function: <strong>map-class-indexes</strong>
+[function]
+
+
+</li>
+
+<li>
+  Function: <strong>map-slot-indexes</strong>
+[function &amp;key (class t) (include-subclasses t)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-add-class-index</strong>
+[(knapsack standard-knapsack) class &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-make-class-index</strong>
+[(knapsack standard-knapsack) class &amp;key (index-spec (quote (btree :key&lt; &lt; :value= p-eql)))]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-remove-class-index</strong>
+[(knapsack standard-knapsack) class &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-map-class-indexes</strong>
+[knapsack function]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-class-index</strong>
+[(knapsack standard-knapsack) class &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-maybe-index-new-object</strong>
+[(knapsack standard-knapsack) class object]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-map-class</strong>
+[(knapsack standard-knapsack) class function &amp;key (id-only nil) (include-subclasses t)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-add-slot-index</strong>
+[(knapsack standard-knapsack) class slot index-spec unique-p &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-remove-slot-index</strong>
+[knapsack class slot &amp;key (errorp nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-map-slot-indexes</strong>
+[(knapsack standard-knapsack) function &amp;key (class t) (include-subclasses t)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-maybe-index-changed-slot</strong>
+[(knapsack standard-knapsack) class object slot old-value new-value old-boundp new-boundp]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-slot-index</strong>
+[(knapsack standard-knapsack) class slot &amp;key (errorp nil) (include-superclasses nil)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-map-slot</strong>
+[(knapsack standard-knapsack) class slot function &amp;key min max include-min include-max (equal nil equal-supplied) (order :ascending) (include-subclasses t)]
+
+
+</li>
+
+<li>
+  Method: <strong>knapsack-delete-object</strong>
+[(knapsack standard-knapsack) object]
+
+
+</li>
+
+<li>
+  Generic: <strong>transaction-start-1</strong>
+[cache knapsack &amp;key &amp;allow-other-keys]
+
+<pre>
+  Creates and returns a new transaction.
+</pre>
+
+
+</li>
+
+<li>
+  Generic: <strong>transaction-commit-1</strong>
+[transaction cache knapsack]
+
+<pre>
+  Save all modified objects to disk.
+</pre>
+
+
+</li>
+
+<li>
+  Class: <strong>transaction</strong> inherits ((standard-object))
+
+<dl>
+
+</dl>
+
+</li>
+
+<li>
+  Class: <strong>standard-transaction</strong> inherits ((transaction))
+
+<dl>
+
+<dt><strong>id</strong> Reader: transaction-id</small></dt>
+
+
+<dt><strong>dirty-objects</strong> Reader: dirty-objects</small></dt><dd>A hash-table (from id to object)
+containing all objects of which the slot changes have not been written
+to disk yet.</dd>
+
+
+<dt><strong>dirty-queue</strong> Reader: dirty-queue</small></dt><dd>A queue with the ids of all objects
+that have been created or modified since the last commit.  The queue
+is in least-recently-dirtied-first order.  During a commit, the
+objects are written to disk in the same order (this is necessary to
+guarantee that the garbage collector never sees an id of an object
+that doesn't exist on disk yet.</dd>
+
+
+</dl>
+
+</li>
+
+<li>
+  Method: <strong>print-object</strong>
+[(transaction transaction) stream]
+
+
+</li>
+
+<li>
+  Function: <strong>current-transaction</strong>
+[]
+
+
+</li>
+
+<li>
+  Function: <strong>transaction-start</strong>
+[&amp;rest args &amp;key (knapsack (current-knapsack)) &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>transaction-start-1</strong>
+[(cache standard-cache) (knapsack standard-knapsack) &amp;key &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>transaction-start-1</strong>
+[(cache standard-cache) (knapsack serial-transaction-knapsack) &amp;key &amp;allow-other-keys]
+
+
+</li>
+
+<li>
+  Method: <strong>transaction-commit-1</strong>
+[(transaction standard-transaction) (cache standard-cache) (knapsack serial-transaction-knapsack)]
+
+
+</li>
+
+<li>
+  Function: <strong>transaction-commit</strong>
+[transaction &amp;key (knapsack (current-knapsack))]
+
+<pre>
+  Call transaction-commit-1 to do the real work.
+</pre>
+
+
+</li>
+
+<li>
+  Method: <strong>transaction-commit-1</strong>
+[(transaction standard-transaction) (cache standard-cache) (knapsack standard-knapsack)]
+
+
+</li>
+
+<li>
+  Function: <strong>transaction-rollback</strong>
+[transaction &amp;key (knapsack (current-knapsack))]
+
+
+</li>
+
+  </ul>
+</div>
+
+</body>
+</html>
