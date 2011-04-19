@@ -1,13 +1,11 @@
-;; $Id: test-index-1a.lisp,v 1.1 2008/01/23 15:49:07 alemmens Exp $
-
-(in-package :rucksack-test)
+(in-package :knapsack-test)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Indexing example
 ;;;
 ;;; To run this example:
 ;;; - compile and load this file
-;;; - (IN-PACKAGE :RUCKSACK-TEST)
+;;; - (IN-PACKAGE :KNAPSACK-TEST)
 ;;; - (CREATE-HACKERS)
 ;;; - (SHOW-HACKERS)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -27,13 +25,13 @@
   ;; would contain everything else (especially methods that specialize on one
   ;; of the classes defined in the first one).
 
-  (defparameter *hacker-rucksack* #p"/tmp/rucksack/hackers/")
+  (defparameter *hacker-knapsack* #p"/tmp/knapsack/hackers/")
 
-  (with-rucksack (rs *hacker-rucksack* :if-exists :supersede)
+  (with-knapsack (rs *hacker-knapsack* :if-exists :supersede)
     (with-transaction ()
 
       ;; We define some persistent classes with indexed slots.
-      ;; So we must wrap the class definition in a WITH-RUCKSACK,
+      ;; So we must wrap the class definition in a WITH-KNAPSACK,
       ;; otherwise the indexes can't be built.
 
       (defclass hacker ()
@@ -60,31 +58,31 @@
             (name hacker))))
 
 (defun create-hackers ()
-  (with-rucksack (rs *hacker-rucksack*)
-    ;; Fill the rucksack with some hackers.
+  (with-knapsack (rs *hacker-knapsack*)
+    ;; Fill the knapsack with some hackers.
     (with-transaction ()
       (loop repeat 20
             do (make-instance 'hacker))
       (loop repeat 10
             do (make-instance 'lisp-hacker))
-      (rucksack-map-class rs 'hacker #'print))))
+      (knapsack-map-class rs 'hacker #'print))))
 
 (defun show-hackers ()
-  (with-rucksack (rs *hacker-rucksack*)
+  (with-knapsack (rs *hacker-knapsack*)
     (with-transaction ()
       (print "Hackers indexed by object id.")
-      (rucksack-map-class rs 'hacker #'print)
+      (knapsack-map-class rs 'hacker #'print)
       (print "Hackers indexed by name.")
-      (rucksack-map-slot rs 'hacker 'name #'print)
+      (knapsack-map-slot rs 'hacker 'name #'print)
       (print "Hackers indexed by hacker-id.")
-      (rucksack-map-slot rs 'hacker 'id #'print)
+      (knapsack-map-slot rs 'hacker 'id #'print)
       (print "Lisp hackers.")
-      (rucksack-map-class rs 'lisp-hacker #'print)
+      (knapsack-map-class rs 'lisp-hacker #'print)
       (print "Non-lisp hackers.")
-      (rucksack-map-class rs 'hacker #'print
+      (knapsack-map-class rs 'hacker #'print
                           :include-subclasses nil)
       (print "Hacker object ids.")
-      (rucksack-map-class rs 'hacker #'print
+      (knapsack-map-class rs 'hacker #'print
                           :id-only t))))
 
 

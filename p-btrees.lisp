@@ -1,6 +1,13 @@
-;; $Id: p-btrees.lisp,v 1.19 2008/02/19 22:44:06 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;; DO: We probably need a lock per btree.  Each btree operation should
 ;; be wrapped in a WITH-LOCK to make sure that nobody else changes the btree
@@ -268,7 +275,7 @@ OBJECT-ID is defined (and returns a unique integer).")
   ;; that will not work for function objects because they can't be
   ;; serialized. This means that you should only specify symbols that
   ;; name a function.  For program-independent databases you should
-  ;; only use symbols from the COMMON-LISP or RUCKSACK packages.
+  ;; only use symbols from the COMMON-LISP or KNAPSACK packages.
   (declare (ignore initargs))
   (if (and (symbolp key<) (symbolp value=)
            (symbolp key-key) (symbolp value-key))
@@ -334,7 +341,6 @@ can't be saved on disk.")))
             (value2 (funcall value-key value2)))
         (funcall value= value1 value2)))))
 
-  
 ;;
 ;; Btree nodes (= 'bnodes').
 ;;
@@ -512,7 +518,7 @@ as a btree."))
   (let ((vector (bnode-bindings node)))
     (make-binding :key (p-aref vector (* 2 i))
                   :value (p-aref vector (1+ (* 2 i))))))
-                          
+
 (defun node-binding-key (node i)
   (p-aref (bnode-bindings node) (* 2 i)))
 
@@ -620,7 +626,7 @@ as a btree."))
      (if binding
          (binding-value binding)
        (not-found btree key errorp default-value)))))
-  
+
 (defgeneric node-search-binding (btree node key)
   (:documentation "Tries to find KEY in NODE or one of its subnodes.
 Returns three values if the key was found: the binding, the node
@@ -990,7 +996,6 @@ greater than KEY.  Returns nil if there is no such binding."
   ;; No such binding: return nil.
   nil)
 
-  
 (defun node-full-p (btree node)
   (>= (bnode-nr-bindings node) (btree-max-node-size btree)))
 
@@ -1047,9 +1052,6 @@ greater than KEY.  Returns nil if there is no such binding."
                       ;; The value is not in the list: forget it.
                       (forget-it)))))))))))
 
-
-
- 
 (defmethod btree-delete-key ((btree btree) key &key (if-does-not-exist :ignore))
   (if (slot-boundp btree 'root)
       (bnode-delete-key btree (btree-root btree) (list nil) key if-does-not-exist)
@@ -1066,7 +1068,7 @@ greater than KEY.  Returns nil if there is no such binding."
     (let ((subnode (find-subnode btree node key)))
       (bnode-delete-key btree subnode (cons node parent-stack)
                              key if-does-not-exist))))
- 
+
 (defun leaf-delete-key (btree leaf parent-stack key if-does-not-exist)
   (let ((binding (find-key-in-node btree leaf key)))
     (unless binding
@@ -1131,7 +1133,6 @@ greater than KEY.  Returns nil if there is no such binding."
             (setf (node-binding-key node position) new-key)
             (update-parents-for-deleted-key btree (rest parent-stack) old-key new-key)))))))
 
- 
 ;; The idea is that DISTRIBUTE-ELEMENTS will only be called if the
 ;; union of the two nodes has enough elements for two nodes that are
 ;; 'full enough'.  JOIN-NODES, OTOH, makes one node out of two,
@@ -1222,8 +1223,6 @@ RIGHT-NODE."
   (loop for i from new-length below (bnode-nr-bindings node)
         do (update-node-binding node i nil nil))
   (setf (bnode-nr-bindings node) new-length))
-    
-
 
 (defun node-full-enough-p (btree node)
   (>= (bnode-nr-bindings node)
@@ -1342,4 +1341,3 @@ RIGHT-NODE."
                 do (map-btree-keys-for-node btree (node-binding-value node i)
                                             function min max include-min include-max
                                             order)))))))
-

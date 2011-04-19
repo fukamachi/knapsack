@@ -1,6 +1,13 @@
-;; $Id: garbage-collector.lisp,v 1.22 2008/02/03 12:32:16 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Garbage collector
@@ -10,7 +17,7 @@
   ((object-table :initarg :object-table :reader object-table)
    (buffer :initform (make-instance 'serialization-buffer)
            :reader serialization-buffer)
-   (rucksack :initarg :rucksack :reader rucksack)
+   (knapsack :initarg :knapsack :reader knapsack)
    ;; Some state used for incremental garbage collection.
    (roots :initarg :roots :initform '() :accessor roots
           :documentation "A list of object-ids of roots that must be kept alive.")
@@ -227,7 +234,7 @@ collector."
           (loop until (or (eql (state heap) :ready) (<= amount 0))
                 do (ecase (state heap)
                      (:starting
-                      (let ((rucksack (rucksack heap)))
+                      (let ((knapsack (knapsack heap)))
                         ;; We were not collecting garbage; start doing that now.
                         (setf (nr-object-bytes-marked heap) 0
                               (nr-heap-bytes-scanned heap) 0
@@ -237,11 +244,11 @@ collector."
                               ;; going to modify the list (just push and pop).
                               ;; But we do need to add the btrees for the class-index-table
                               ;; and slot-index-tables to the GC roots.
-                              (roots heap) (append (and (slot-boundp rucksack 'class-index-table)
-                                                        (list (slot-value rucksack 'class-index-table)))
-                                                   (and (slot-boundp rucksack 'slot-index-tables)
-                                                        (list (slot-value rucksack 'slot-index-tables)))
-                                                   (slot-value (rucksack heap) 'roots))))
+                              (roots heap) (append (and (slot-boundp knapsack 'class-index-table)
+                                                        (list (slot-value knapsack 'class-index-table)))
+                                                   (and (slot-boundp knapsack 'slot-index-tables)
+                                                        (list (slot-value knapsack 'slot-index-tables)))
+                                                   (slot-value (knapsack heap) 'roots))))
                       (setf (state heap) :marking-object-table))
                      (:marking-object-table
                       (decf amount (mark-some-objects-in-table heap amount)))
@@ -437,7 +444,7 @@ collector."
                  (delete-object-id object-table object-id)
                  ;; Don't forget to remove the id->object mapping from
                  ;; the cache!  (This was a difficult bug to find.)
-                 (cache-delete-object object-id (rucksack-cache (rucksack heap))))
+                 (cache-delete-object object-id (knapsack-cache (knapsack heap))))
                (incf (nr-object-bytes-sweeped heap) object-block-size)))
     ;;
     (when (>= (nr-object-bytes-sweeped heap) (nr-object-bytes heap))
@@ -446,7 +453,7 @@ collector."
     ;; Return the amount of work done.
     work-done))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;              
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Parameters to control GC
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -454,7 +461,7 @@ collector."
   "A flag to indicate whether or not transaction-commit collects garbage")
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;              
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; MAYBE LATER: MERGING DEAD BLOCKS.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -1,6 +1,4 @@
-;; $Id: test-index-1b.lisp,v 1.1 2008/01/23 15:49:07 alemmens Exp $
-
-(in-package :rs-test)
+(in-package :knapsack-test)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Class redefinition example
@@ -9,7 +7,7 @@
 ;;; - First run the indexing example in test-index-1a.lisp.
 ;;; - Compile and load this file
 ;;;   This will change the class definition of HACKER.
-;;;   Because of this change, Rucksack will remove some slot indexes and
+;;;   Because of this change, Knapsack will remove some slot indexes and
 ;;;   create (and fill) other slot indexes.
 ;;; - (SHOW-HACKERS)
 ;;;   Notice that "Hackers indexed by hacker-id." now doesn't list any hackers,
@@ -23,11 +21,11 @@
 ;;;   (3) the index has been filled with the new values for the age slot.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(with-rucksack (rs *hacker-rucksack*)
+(with-knapsack (rs *hacker-knapsack*)
   (with-transaction ()
 
     ;; For classes that may change during program development, you should
-    ;; wrap all class definitions in a WITH-RUCKSACK to make sure that
+    ;; wrap all class definitions in a WITH-KNAPSACK to make sure that
     ;; the corresponding schemas and indexes are updated correctly.
     
     ;; In this case we redefine the HACKER class: we remove the index for
@@ -46,10 +44,10 @@
       (:index t))))
 
 (defun show-hackers-by-age ()
-  (with-rucksack (rs *hacker-rucksack*)
+  (with-knapsack (rs *hacker-knapsack*)
     (with-transaction ()
       (print "Hackers by age.")
-      (rucksack-map-slot rs 'hacker 'age
+      (knapsack-map-slot rs 'hacker 'age
                          (lambda (hacker)
                            (format t "~&~A has age ~D.~%"
                                    (name hacker)

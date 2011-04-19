@@ -1,6 +1,13 @@
-;; $Id: schema-table.lisp,v 1.7 2007/01/20 18:17:55 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)          
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Schema table
@@ -133,12 +140,10 @@ at the next commit.")))
     (add-schema table schema)
     schema))
 
-                                    
 (defmethod compute-persistent-slot-names ((class persistent-class) object)
   (declare (ignore object))
   (mapcar #'slot-definition-name (class-persistent-slots class)))
 
-                   
 (defmethod add-schema ((table schema-table) (schema schema))
   (setf (gethash (schema-id schema) (schema-table-by-id table))
         schema)
@@ -192,7 +197,7 @@ at the next commit.")))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod maybe-update-schemas ((table schema-table) class)
-  ;; Rucksack analyzes the new class definition; if it's different from the
+  ;; Knapsack analyzes the new class definition; if it's different from the
   ;; previous version, a new schema is added to the schema table.  From that
   ;; moment, when an instance of the redefined class is created it will be
   ;; saved with the new schema id.

@@ -1,7 +1,14 @@
-;; This is an in-memory version of btrees.  At the moment it's not used
-;; by the rest of the system.
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(defpackage :btree
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :cl-user)
+(defpackage btree
   (:use :cl)
   (:export
    ;; Btrees
@@ -21,7 +28,6 @@
    #:btree-error #:btree-search-error #:btree-insertion-error
    #:btree-key-already-present-error #:btree-type-error
    #:btree-error-btree #:btree-error-key #:btree-error-value))
-
 (in-package :btree)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

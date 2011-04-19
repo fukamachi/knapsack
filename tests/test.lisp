@@ -1,21 +1,19 @@
-;; $Id: test.lisp,v 1.2 2008/02/11 12:47:53 alemmens Exp $
-
-(in-package :rucksack-test)
+(in-package :knapsack-test)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; A few quick tests to make sure the basics work.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter *test-suite* #p"/tmp/rucksack-test-suite/")
+(defparameter *test-suite* #p"/tmp/knapsack-test-suite/")
 
 (defmacro p-test (form test)
   `(progn
-     (with-rucksack (in *test-suite* :if-exists :supersede)
+     (with-knapsack (in *test-suite* :if-exists :supersede)
        (with-transaction ()
-         (add-rucksack-root ,form in)))
-     (with-rucksack (out *test-suite* :if-exists :overwrite)
+         (add-knapsack-root ,form in)))
+     (with-knapsack (out *test-suite* :if-exists :overwrite)
        (with-transaction ()
-         (let ((all (rucksack-roots out)))
+         (let ((all (knapsack-roots out)))
            (assert (= 1 (length all)))
            (let ((it (car all)))
              (assert ,test)))))))
@@ -26,21 +24,21 @@
 (defclass p-thing-1 ()
   ()
   (:metaclass persistent-class))
-  
+
 (defclass p-thing-2 ()
   ((x :initarg :x :reader x-of :persistence t))
   (:metaclass persistent-class))
-  
+
 (defun test-basics ()
   ;;
   ;; Serializing/deserializing pathnames.
   ;;
 
   (let ((store (merge-pathnames *test-suite* "store")))
-    (rucksack::save-objects (list store) store)
-    (test (equal (list store) (rucksack::load-objects store))))
+    (knapsack::save-objects (list store) store)
+    (test (equal (list store) (knapsack::load-objects store))))
 
-  (test (not (current-rucksack)))
+  (test (not (current-knapsack)))
 
   ;;
   ;; P-CONS, P-CAR, P-CDR, P-LIST, P-MAKE-ARRAY, P-AREF
@@ -49,7 +47,7 @@
   (p-test (p-cons 1 2)
           (and (= 1 (p-car it)) (= 2 (p-cdr it))))
   
-  (test (not (current-rucksack))) ; WITH-RUCKSACK should not leave one around
+  (test (not (current-knapsack))) ; WITH-KNAPSACK should not leave one around
   
   (p-test (p-list 1 2 3)
 	  (equal '(1 2 3)
@@ -85,12 +83,11 @@
                        (btree-search it 42 :errorp nil))
                  '(zero ten fifteen nil)))
 
-  (test (not (current-rucksack)))
+  (test (not (current-knapsack)))
   (write-line "basic tests ok"))
 
 (eval-when (:load-toplevel)
   (test-basics))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test objects
@@ -119,9 +116,6 @@
   ;; DO: We need a lot more tests here for other functions like
   ;; P-MEMBER-IF, P-FIND, P-REPLACE, etcetera.
   :ok)
-  
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test basic create, load and update functionality with many objects, so
@@ -144,34 +138,33 @@
             (age person))))
 
 (defun test-create (&key (nr-objects 100000))
-  "Test creating a rucksack with many persons."
-  (with-rucksack (rucksack *test-suite* :if-exists :supersede)
+  "Test creating a knapsack with many persons."
+  (with-knapsack (knapsack *test-suite* :if-exists :supersede)
     (with-transaction ()
       (loop for i below nr-objects
             do (let ((person (make-instance 'person)))
                  (when (zerop (mod i 1000))
                    (format t "~D " i))
-                 (add-rucksack-root person rucksack))))))
+                 (add-knapsack-root person knapsack))))))
 
-  
 (defun test-update (&key (new-age 27))
   "Test updating all persons by changing their age."
-  (with-rucksack (rucksack *test-suite*)
+  (with-knapsack (knapsack *test-suite*)
     (with-transaction ()
-      (map-rucksack-roots (lambda (person)
+      (map-knapsack-roots (lambda (person)
                             (setf (age person) new-age))
-                          rucksack))))
+                          knapsack))))
 
 (defun test-load ()
   "Test loading all persons by computing their average age."
-  (with-rucksack (rucksack *test-suite*)
+  (with-knapsack (knapsack *test-suite*)
     (with-transaction ()
       (let ((nr-persons 0)
             (total-age 0))
-        (map-rucksack-roots (lambda (person)
+        (map-knapsack-roots (lambda (person)
                               (incf nr-persons)
                               (incf total-age (age person)))
-                            rucksack)
+                            knapsack)
         ;; Return the average age as a float.
         ;; (An average age of 1200/75 doesn't seem right.)
         (coerce (/ total-age nr-persons) 'float)))))
@@ -185,7 +178,7 @@
 ;; Test btrees as just another persistent data structure.
 ;;
 
-(defparameter *format-strings* 
+(defparameter *format-strings*
   ;; Different ways of printing integers.
   '("~R" "~:R" "... ~R" "~D"))
 
@@ -226,14 +219,14 @@
 
 (defun test-btree (&key (n 20000) (node-size 100) (delete (floor n 10))
                         check-contents)
-  ;; Create a rucksack with a btree of size N that maps random
+  ;; Create a knapsack with a btree of size N that maps random
   ;; integers to the equivalent strings as a cardinal English number.
   ;; Use node size NODE-SIZE for the btree.
   ;; If DELETE is not NIL, delete and reinsert that number of elements
   ;; as well.
   (let ((array (make-array n :initial-contents (loop for i below n collect i))))
     (shuffle array)
-    (with-rucksack (rucksack *test-suite* :if-exists :supersede)
+    (with-knapsack (knapsack *test-suite* :if-exists :supersede)
       (with-transaction* ()
         (format t "~&Inserting~%")
         (let ((btree (make-instance 'btree :value= 'string-equal
@@ -244,10 +237,10 @@
                 do (format t "~D " i)
                 do (btree-insert btree key
                                  (format nil (first *format-strings*) key)))
-          (add-rucksack-root btree rucksack))))
-    (with-rucksack (rucksack *test-suite*)
+          (add-knapsack-root btree knapsack))))
+    (with-knapsack (knapsack *test-suite*)
       (with-transaction ()
-        (let ((btree (first (rucksack-roots rucksack))))
+        (let ((btree (first (knapsack-roots knapsack))))
           (check-order btree)
           (check-size btree n)
           (when check-contents
@@ -258,7 +251,7 @@
         (shuffle array)
         (with-transaction* ()
           (format t "~&Deleting~%")
-          (let ((btree (first (rucksack-roots rucksack))))
+          (let ((btree (first (knapsack-roots knapsack))))
             (dotimes (i delete)
               (when (zerop (mod (1+ i) 100))
                 (format t "~D " (1+ i)))
@@ -266,7 +259,7 @@
             (check-order btree)
             (check-contents btree)))
         (with-transaction* ()
-          (let ((btree (first (rucksack-roots rucksack))))
+          (let ((btree (first (knapsack-roots knapsack))))
             (check-order btree)
             (check-size btree (- n delete))
             (when check-contents
@@ -279,7 +272,7 @@
               (let ((key (aref array i)))
                 (btree-insert btree key (format nil "~R" key))))))
         (with-transaction ()
-          (let ((btree (first (rucksack-roots rucksack))))
+          (let ((btree (first (knapsack-roots knapsack))))
             (check-order btree)
             (check-size btree n)
             (when check-contents
@@ -302,7 +295,7 @@
 
 (defun test-non-unique-btree (&key (n 20000) (node-size 100) (delete (floor n 10))
                                    check-contents)
-  ;; Create a rucksack with a btree of size N (N must be a multiple of 4) that
+  ;; Create a knapsack with a btree of size N (N must be a multiple of 4) that
   ;; maps random integers to four different equivalent strings (in Roman and
   ;; English notation).
   ;; Use node size NODE-SIZE for the btree.
@@ -315,7 +308,7 @@
     (assert (zerop (mod n nr-formats)))
     (assert (zerop (mod delete nr-formats)))
     (shuffle array)
-    (with-rucksack (rucksack *test-suite* :if-exists :supersede)
+    (with-knapsack (knapsack *test-suite* :if-exists :supersede)
       (with-transaction* ()
         (format t "~&Inserting~%")
         (let ((btree (make-instance 'btree :value= 'string-equal
@@ -327,10 +320,10 @@
                 do (format t "~D " i)
                 do (loop for format-string in *format-strings*
                          do (btree-insert btree key (format nil format-string key))))
-          (add-rucksack-root btree rucksack))))
-    (with-rucksack (rucksack *test-suite*)
+          (add-knapsack-root btree knapsack))))
+    (with-knapsack (knapsack *test-suite*)
       (with-transaction ()
-        (let ((btree (first (rucksack-roots rucksack))))
+        (let ((btree (first (knapsack-roots knapsack))))
           (check-order btree)
           (check-size btree n)
           (when check-contents
@@ -341,7 +334,7 @@
         (shuffle array)
         (with-transaction* ()
           (format t "~&Deleting~%")
-          (let ((btree (first (rucksack-roots rucksack))))
+          (let ((btree (first (knapsack-roots knapsack))))
             (loop for i below (floor delete nr-formats)
                   do (loop for j below nr-formats
                            do (when (zerop (mod (+ j (* nr-formats i)) 10))
@@ -359,7 +352,7 @@
             (check-size btree (- n delete))
             (check-non-unique-contents btree)))
         (with-transaction* ()
-          (let ((btree (first (rucksack-roots rucksack))))
+          (let ((btree (first (knapsack-roots knapsack))))
             (check-order btree)
             (check-size btree (- n delete))
             (when check-contents
@@ -373,7 +366,7 @@
                 (loop for format-string in *format-strings*
                       do (btree-insert btree key (format nil format-string key)))))))
         (with-transaction ()
-          (let ((btree (first (rucksack-roots rucksack))))
+          (let ((btree (first (knapsack-roots knapsack))))
             (check-order btree)
             (check-size btree n)
             (when check-contents
@@ -388,9 +381,9 @@
 (defun test-btree-map (&key (display t) min max include-min include-max
                             (order :ascending))
   ;; Print out the contents of the btree.
-  (with-rucksack (rucksack *test-suite*)
+  (with-knapsack (knapsack *test-suite*)
     (with-transaction ()
-      (let ((btree (first (rucksack-roots rucksack))))
+      (let ((btree (first (knapsack-roots knapsack))))
         (map-btree btree
                    (lambda (key value)
                      (when display
@@ -407,14 +400,14 @@
 
 (defun check-gc (n)
   ;; This used to fail for large values of N (e.g. 10,000).
-  (with-rucksack (rucksack *test-suite* :if-exists :supersede)
+  (with-knapsack (knapsack *test-suite* :if-exists :supersede)
     (with-transaction ()
       ;; after this, INNER can be reached directly from the root
       (let* ((inner (p-cons "Waldorf" "Statler"))
              (root (p-cons 42 inner)))
-        (add-rucksack-root root rucksack)))
+        (add-knapsack-root root knapsack)))
     (with-transaction ()
-      (let* ((root (first (rucksack-roots rucksack)))
+      (let* ((root (first (knapsack-roots knapsack)))
              (inner (p-cdr root))
              (array (p-make-array n)))
         ;; after this, INNER can't be reached from the root anymore
@@ -428,7 +421,7 @@
         (setf (p-car root) array
               (p-cdr root) (p-cons 'bar (p-cons 'foo inner)))))
     (with-transaction ()
-      (let* ((root (first (rucksack-roots rucksack)))
+      (let* ((root (first (knapsack-roots knapsack)))
              (inner (p-cdr (p-cdr (p-cdr root)))))
         ;; we expect the list ("Waldorf" "Statler") here
         (list (p-car inner) (p-cdr inner))))))

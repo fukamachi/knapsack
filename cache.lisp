@@ -1,6 +1,13 @@
-;; $Id: cache.lisp,v 1.16 2009/05/27 14:26:25 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Cache: API
@@ -82,8 +89,8 @@ cache."))
   ;; keep track of different class versions for objects in the heap.
   ((heap :initarg :heap :reader heap)
    (schema-table :initarg :schema-table :reader schema-table)
-   (rucksack :initarg :rucksack :reader rucksack
-             :documentation "Back pointer to the rucksack.")
+   (knapsack :initarg :knapsack :reader knapsack
+             :documentation "Back pointer to the knapsack.")
    ;; Clean objects
    (objects :initarg :objects
             :reader objects
@@ -200,7 +207,7 @@ very stupid about the objects it should try to keep in memory."))
                             :class heap-class
                             :if-exists if-exists
                             :if-does-not-exist if-does-not-exist
-                            :rucksack (rucksack cache)
+                            :knapsack (knapsack cache)
                             :options (list* :object-table object-table
                                             heap-options))
             schema-table (open-schema-table (merge-pathnames "schemas" directory)
@@ -261,7 +268,7 @@ already dirty, nothing happens."
     (let ((old-transaction
            (find-conflicting-transaction object-id cache transaction)))
       (when old-transaction
-        (rucksack-error 'transaction-conflict
+        (knapsack-error 'transaction-conflict
                         :object-id object-id
                         :new-transaction transaction
                         :old-transaction old-transaction)))
@@ -479,7 +486,7 @@ T if the object was already comitted, otherwise nil."))
          (multiple-value-bind (id nr-slots schema transaction-id older)
              (load-object-fields buffer object-id)
            ;; DO: Don't load id, nr-slots, schema at all!
-           (declare (ignore id nr-slots schema)) 
+           (declare (ignore id nr-slots schema))
            (cond ((= transaction-id partial-transaction-id)
                   ;; Got it.  Remove from the version list.
                   (if younger
@@ -501,7 +508,3 @@ T if the object was already comitted, otherwise nil."))
                   ;; Keep trying older versions.
                   (setq younger block
                         block older)))))))))
-
-
-
-

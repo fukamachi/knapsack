@@ -1,10 +1,10 @@
-Rucksack is a persistence library for Common Lisp.
+Knapsack is a persistence library for Common Lisp.
 
-Rucksack is distributed under the following MIT style license:
+Knapsack is distributed under the following MIT style license:
 
 ----------------------------------------------------------------------
 Copyright (c) 2006  Arthur Lemmens
-Copyright (c) 2011  Tomohiro Matsuyama, Eitarow Fukamachi.
+Copyright (c) 2011  Eitarow Fukamachi, Tomohiro Matsuyama.
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

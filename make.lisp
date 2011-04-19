@@ -1,10 +1,16 @@
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-;; $Id: make.lisp,v 1.7 2007/08/12 13:01:13 alemmens Exp $
+  For the full copyright and license information, please see the LICENSE.
+|#
 
 (in-package :cl-user)
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
-  (defparameter *rucksack-directory* *load-pathname*))
+  (defparameter *knapsack-directory* *load-pathname*))
 
 (defun make (&key (debug t))
   (when debug
@@ -14,7 +20,7 @@
                         "package"
                         "errors"
                         "mop"
-                        "serialize" 
+                        "serialize"
                         "heap"
                         "object-table"
                         "schema-table"
@@ -23,14 +29,14 @@
                         "objects"
                         "p-btrees"
                         "index"
-                        "rucksack"
+                        "knapsack"
                         "transactions"
                         "test")
           do (tagbody
               :retry
               (let ((lisp (make-pathname :name file
                                          :type "lisp"
-                                         :defaults *rucksack-directory*)))
+                                         :defaults *knapsack-directory*)))
                 (multiple-value-bind (fasl warnings failure)
                     (compile-file lisp)
                   (declare (ignore warnings))

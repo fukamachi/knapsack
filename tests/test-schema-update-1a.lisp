@@ -1,12 +1,10 @@
-;; $Id: test-schema-update-1a.lisp,v 1.1 2008/01/23 15:49:07 alemmens Exp $
-
-(in-package :rucksack-test-schema-update)
+(in-package :knapsack-test-schema-update)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Schema updates and UPDATE-INSTANCE-FOR-REDEFINED-CLASS, part 1 of 3
 ;;;
 ;;; After compiling and loading this file, evaluate:
-;;; - (in-package :rucksack-test-schema-update)
+;;; - (in-package :knapsack-test-schema-update)
 ;;; - (test-1)
 ;;;
 ;;; Then move on to test-schema-update-1b.lisp.
@@ -20,9 +18,9 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 
-  (defparameter *dir* #P"/tmp/rucksack/schema-update/")
+  (defparameter *dir* #P"/tmp/knapsack/schema-update/")
   
-  (with-rucksack (rs *dir* :if-exists :supersede)
+  (with-knapsack (rs *dir* :if-exists :supersede)
     (with-transaction ()
       
       (defclass person ()
@@ -46,14 +44,14 @@
 
 (defun test-1 ()
   ;; Create some persons.
-  (with-rucksack (rs *dir*)
+  (with-knapsack (rs *dir*)
     (with-transaction ()
       (loop repeat 10
             do (make-instance 'person))))
   ;; Show them.
-  (with-rucksack (rs *dir*)
+  (with-knapsack (rs *dir*)
     (with-transaction ()
-      (rucksack-map-class rs 'person #'print))))
+      (knapsack-map-class rs 'person #'print))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Sample output

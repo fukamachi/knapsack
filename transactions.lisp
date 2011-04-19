@@ -1,6 +1,13 @@
-;; $Id: transactions.lisp,v 1.15 2009/05/27 14:26:25 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Transactions
@@ -18,13 +25,13 @@
 ;;;  transaction-start-1
 ;;;  
 
-(defgeneric transaction-start-1 (cache rucksack &key &allow-other-keys)
+(defgeneric transaction-start-1 (cache knapsack &key &allow-other-keys)
   (:documentation "Creates and returns a new transaction."))
 
-(defgeneric transaction-commit-1 (transaction cache rucksack)
+(defgeneric transaction-commit-1 (transaction cache knapsack)
   (:documentation "Save all modified objects to disk."))
 
-(defgeneric transaction-rollback-1 (transaction cache rucksack))
+(defgeneric transaction-rollback-1 (transaction cache knapsack))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Transactions
@@ -124,16 +131,16 @@ returns nil."))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun transaction-start (&rest args
-                          &key (rucksack (current-rucksack))
+                          &key (knapsack (current-knapsack))
                           &allow-other-keys)
-  (apply #'transaction-start-1 (rucksack-cache rucksack) rucksack args))
+  (apply #'transaction-start-1 (knapsack-cache knapsack) knapsack args))
 
 
 (defmethod transaction-start-1 ((cache standard-cache)
-                                (rucksack standard-rucksack)
+                                (knapsack standard-knapsack)
                                 &key &allow-other-keys)
   ;; Create new transaction.
-  (let* ((id (incf (highest-transaction-id rucksack)))
+  (let* ((id (incf (highest-transaction-id knapsack)))
          (transaction (make-instance 'standard-transaction :id id)))
     ;; Add to open transactions.
     (open-transaction cache transaction)
@@ -141,50 +148,50 @@ returns nil."))
     transaction))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Rucksacks with serial transactions
+;;; Knapsacks with serial transactions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass serial-transaction-rucksack (standard-rucksack)
-  ((transaction-lock :initform (make-lock :name "Rucksack transaction lock")
-                     :reader rucksack-transaction-lock))
+(defclass serial-transaction-knapsack (standard-knapsack)
+  ((transaction-lock :initform (make-lock :name "Knapsack transaction lock")
+                     :reader knapsack-transaction-lock))
   (:documentation
-   "A serial transaction rucksack allows only one active transaction
+   "A serial transaction knapsack allows only one active transaction
 at a time."))
 
 (defmethod transaction-start-1 :before ((cache standard-cache)
-                                        (rucksack serial-transaction-rucksack)
+                                        (knapsack serial-transaction-knapsack)
                                         &key &allow-other-keys)
-  (process-lock (rucksack-transaction-lock rucksack)))
+  (process-lock (knapsack-transaction-lock knapsack)))
 
 (defmethod transaction-commit-1 :after ((transaction standard-transaction)
                                         (cache standard-cache)
-                                        (rucksack serial-transaction-rucksack))
-  (process-unlock (rucksack-transaction-lock rucksack)))
+                                        (knapsack serial-transaction-knapsack))
+  (process-unlock (knapsack-transaction-lock knapsack)))
 
 (defmethod transaction-rollback-1 :after ((transaction standard-transaction)
                                           (cache standard-cache)
-                                          (rucksack serial-transaction-rucksack))
-  (process-unlock (rucksack-transaction-lock rucksack)))
+                                          (knapsack serial-transaction-knapsack))
+  (process-unlock (knapsack-transaction-lock knapsack)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Committing a transaction
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; use without-rucksack-gcing to locally set
-;;; *collect-garbage-on-commit* to nil in order to supress rucksack
+;;; use without-knapsack-gcing to locally set
+;;; *collect-garbage-on-commit* to nil in order to supress knapsack
 ;;; garbage collection on commit
-(defmacro without-rucksack-gcing (&body body)
+(defmacro without-knapsack-gcing (&body body)
   `(let ((*collect-garbage-on-commit* nil))
      ,@body))
 
-(defun transaction-commit (transaction &key (rucksack (current-rucksack)))
+(defun transaction-commit (transaction &key (knapsack (current-knapsack)))
   "Call transaction-commit-1 to do the real work."
-  (transaction-commit-1 transaction (rucksack-cache rucksack) rucksack))
+  (transaction-commit-1 transaction (knapsack-cache knapsack) knapsack))
 
 (defmethod transaction-commit-1 ((transaction standard-transaction)
                                  (cache standard-cache)
-                                 (rucksack standard-rucksack))
+                                 (knapsack standard-knapsack))
   ;; Save all dirty objects to disk.
   (if (zerop (transaction-nr-dirty-objects transaction))
       (close-transaction cache transaction)
@@ -211,7 +218,7 @@ at a time."))
           (setq nr-allocated-octets (nr-allocated-octets heap)))
         ;; Check for consistency between hash table and queue.
         (unless (zerop (hash-table-count table))
-          (internal-rucksack-error
+          (internal-knapsack-error
            "Mismatch between dirty hash-table and queue while committing ~S:
 ~D objects left in hash-table."
            transaction
@@ -228,20 +235,19 @@ at a time."))
                                 (gc-work-for-size heap nr-allocated-octets)))
         ;; 6. Make sure that all changes are actually on disk before
         ;; we continue.
-        (finish-all-output rucksack)))))
+        (finish-all-output knapsack)))))
 
-(defmethod finish-all-output ((rucksack standard-rucksack))
-  (let ((cache (rucksack-cache rucksack)))
+(defmethod finish-all-output ((knapsack standard-knapsack))
+  (let ((cache (knapsack-cache knapsack)))
     (finish-heap-output (heap cache))
     (finish-heap-output (object-table (heap cache)))
     ;; NOTE: I'm not totally sure that saving the schema table for
     ;; each transaction commit is necessary, but it probably is.  So
     ;; let's play safe for now.  We definitely need to save the roots,
     ;; because the highest transaction-id is part of the roots file.
-    (save-roots rucksack)
+    (save-roots knapsack)
     (save-schema-table-if-necessary (schema-table cache))))
 
-                                        
 ;;
 ;; Commit file
 ;;
@@ -359,21 +365,14 @@ OLD-BLOCK."
 ;;; Rolling back
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun transaction-rollback (transaction &key (rucksack (current-rucksack)))
+(defun transaction-rollback (transaction &key (knapsack (current-knapsack)))
   (transaction-rollback-1 transaction
-                          (rucksack-cache rucksack)
-                          rucksack))
+                          (knapsack-cache knapsack)
+                          knapsack))
 
 (defmethod transaction-rollback-1 ((transaction standard-transaction)
                                    (cache standard-cache)
-                                   (rucksack standard-rucksack))
+                                   (knapsack standard-knapsack))
   (clrhash (dirty-objects transaction))
   (queue-clear (dirty-queue transaction))
   (close-transaction cache transaction))
-
-
- 
-
-
-        
-

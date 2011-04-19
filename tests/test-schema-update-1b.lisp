@@ -1,6 +1,4 @@
-;; $Id: test-schema-update-1b.lisp,v 1.1 2008/01/23 15:49:07 alemmens Exp $
-
-(in-package :rucksack-test-schema-update)
+(in-package :knapsack-test-schema-update)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Schema updates and UPDATE-INSTANCE-FOR-REDEFINED-CLASS, part 2 of 3
@@ -17,7 +15,7 @@
 ;;
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (with-rucksack (rs *dir*)
+  (with-knapsack (rs *dir*)
     (with-transaction ()
       
       (defclass person ()
@@ -53,7 +51,7 @@
 
 (defun test-2 ()
   ;; Create some persons with the new class definition.
-  (with-rucksack (rs *dir*)
+  (with-knapsack (rs *dir*)
     (with-transaction ()
       (loop repeat 10
             do (make-instance 'person))))
@@ -63,11 +61,11 @@
   ;; update them and we want to keep a few old instances for the next
   ;; part of the test).
   
-  (with-rucksack (rs *dir*)
+  (with-knapsack (rs *dir*)
     (with-transaction ()
-      (let ((cache (rucksack-cache rs))
+      (let ((cache (knapsack-cache rs))
             (count 0))
-        (rucksack-map-class rs 'person
+        (knapsack-map-class rs 'person
                             (lambda (id)
                               (when (evenp count)
                                 (print (cache-get-object id cache)))

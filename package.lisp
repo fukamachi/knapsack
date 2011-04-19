@@ -1,10 +1,17 @@
-;; $Id: package.lisp,v 1.14 2008/02/19 22:44:06 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
+
+  For the full copyright and license information, please see the LICENSE.
+|#
 
 #-(or allegro lispworks sbcl openmcl)
   (error "Unsupported implementation: ~A" (lisp-implementation-type))
 
-(defpackage :rucksack
-  (:nicknames :rs)
+(defpackage knapsack
+  (:nicknames :ks)
 
    (:use :queue :cl
     #+allegro :mop
@@ -47,29 +54,29 @@
    #:open-heap #:close-heap
    #:heap-stream #:heap-end
 
-   ;; Rucksacks
-   #:*rucksack*
-   #:open-rucksack #:close-rucksack #:with-rucksack #:current-rucksack
-   #:rucksack #:standard-rucksack
-   #:rucksack-cache
-   #:rucksack-directory
-   #:rucksack-commit #:rucksack-rollback
-   #:add-rucksack-root #:map-rucksack-roots #:rucksack-roots
+   ;; Knapsacks
+   #:*knapsack*
+   #:open-knapsack #:close-knapsack #:with-knapsack #:current-knapsack
+   #:knapsack #:standard-knapsack
+   #:knapsack-cache
+   #:knapsack-directory
+   #:knapsack-commit #:knapsack-rollback
+   #:add-knapsack-root #:map-knapsack-roots #:knapsack-roots
    #:commit #:rollback
 
    ;; Class and slot indexing
    #:add-class-index #:add-slot-index
    #:remove-class-index #:remove-slot-index
    #:map-class-indexes #:map-slot-indexes
-   #:rucksack-add-class-index #:rucksack-add-slot-index
-   #:rucksack-make-class-index
-   #:rucksack-remove-class-index #:rucksack-remove-slot-index
-   #:rucksack-class-index #:rucksack-slot-index
-   #:rucksack-map-class-indexes #:rucksack-map-slot-indexes
-   #:rucksack-maybe-index-changed-slot #:rucksack-maybe-index-new-object
-   #:rucksack-map-class #:rucksack-map-slot
-   #:rucksack-do-class #:rucksack-do-slot
-   #:rucksack-delete-object
+   #:knapsack-add-class-index #:knapsack-add-slot-index
+   #:knapsack-make-class-index
+   #:knapsack-remove-class-index #:knapsack-remove-slot-index
+   #:knapsack-class-index #:knapsack-slot-index
+   #:knapsack-map-class-indexes #:knapsack-map-slot-indexes
+   #:knapsack-maybe-index-changed-slot #:knapsack-maybe-index-new-object
+   #:knapsack-map-class #:knapsack-map-slot
+   #:knapsack-do-class #:knapsack-do-slot
+   #:knapsack-delete-object
 
    ;; Transactions
    #:current-transaction
@@ -81,9 +88,9 @@
    #:transaction-id
 
    ;; Conditions
-   #:rucksack-error #:simple-rucksack-error #:transaction-conflict
-   #:internal-rucksack-error
-   #:duplicate-slot-value #:slot-error 
+   #:knapsack-error #:simple-knapsack-error #:transaction-conflict
+   #:internal-knapsack-error
+   #:duplicate-slot-value #:slot-error
 
    ;; Indexes
    #:map-index #:index-insert #:index-delete #:make-index
@@ -104,5 +111,3 @@
    #:btree-error #:btree-search-error #:btree-insertion-error
    #:btree-key-already-present-error #:btree-type-error
    #:btree-error-btree #:btree-error-key #:btree-error-value))
-
-

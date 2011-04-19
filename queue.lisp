@@ -1,17 +1,13 @@
-;; $Id: queue.lisp,v 1.4 2007/01/20 18:17:55 alemmens Exp $
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Queues
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 #|
-Usage:
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-- Create a queue with (make-instance 'queue)
-
-- The rest should be obvious.
+  For the full copyright and license information, please see the LICENSE.
 |#
 
+(in-package :cl-user)
 (defpackage :queue
   (:use :common-lisp)
   (:export
@@ -24,7 +20,7 @@ Usage:
 
 (in-package :queue)
 
-;;; 
+;;;
 ;;; QUEUE
 ;;;
 
@@ -40,7 +36,6 @@ Usage:
                  error
                (format stream "Queue ~A is empty." queue)))))
 
-          
 (defmethod print-object ((queue queue) stream)
   (print-unreadable-object (queue stream :type t :identity t)
     (format stream "of size ~D" (queue-size queue))))

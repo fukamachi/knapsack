@@ -1,28 +1,35 @@
-;; $Id: errors.lisp,v 1.3 2007/01/20 18:17:55 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Rucksack errors
+;;; Knapsack errors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-condition rucksack-error (error)
-  ((rucksack :initarg :rucksack :initform (current-rucksack)
-             :reader rucksack)))
+(define-condition knapsack-error (error)
+  ((knapsack :initarg :knapsack :initform (current-knapsack)
+             :reader knapsack)))
 
-(defmethod print-object ((error rucksack-error) stream)
-  (format stream "Rucksack error in ~A." (rucksack error)))
+(defmethod print-object ((error knapsack-error) stream)
+  (format stream "Knapsack error in ~A." (knapsack error)))
 
-(defun rucksack-error (class &rest args)
+(defun knapsack-error (class &rest args)
   (apply #'error class
-         :rucksack (current-rucksack)
+         :knapsack (current-knapsack)
          args))
 
 ;;
 ;; Transaction conflict
 ;;
 
-(define-condition transaction-conflict (rucksack-error)
+(define-condition transaction-conflict (knapsack-error)
   ((transaction :initarg :transaction :initform (current-transaction)
                 :reader transaction)
    (old-transaction :initarg :old-transaction
@@ -42,44 +49,44 @@ modified it and hasn't committed yet."
           (old-transaction error)))
 
 ;;
-;; Simple rucksack error
+;; Simple knapsack error
 ;;
 
-(define-condition simple-rucksack-error (rucksack-error simple-error)
+(define-condition simple-knapsack-error (knapsack-error simple-error)
   ())
 
-(defmethod print-object :after ((error simple-rucksack-error) stream)
+(defmethod print-object :after ((error simple-knapsack-error) stream)
   (format stream "~&~A~%"
           (apply #'format nil (simple-condition-format-control error)
                  (simple-condition-format-arguments error))))
 
-(defun simple-rucksack-error (format-string &rest format-args)
-  (rucksack-error 'simple-rucksack-error
+(defun simple-knapsack-error (format-string &rest format-args)
+  (knapsack-error 'simple-knapsack-error
                   :format-control format-string
                   :format-arguments format-args))
 
 
 ;;
-;; Internal rucksack errors
+;; Internal knapsack errors
 ;;
 
-(define-condition internal-rucksack-error (rucksack-error simple-error)
+(define-condition internal-knapsack-error (knapsack-error simple-error)
   ())
 
-(defmethod print-object :after ((error internal-rucksack-error) stream)
+(defmethod print-object :after ((error internal-knapsack-error) stream)
   (format stream "~&Internal error: ~A~%"
           (apply #'format nil (simple-condition-format-control error)
                  (simple-condition-format-arguments error))))
 
-(defun internal-rucksack-error (format-string &rest format-args)
-  (rucksack-error 'internal-rucksack-error
+(defun internal-knapsack-error (format-string &rest format-args)
+  (knapsack-error 'internal-knapsack-error
                   :format-control format-string
                   :format-arguments format-args))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-condition slot-error (rucksack-error)
+(define-condition slot-error (knapsack-error)
   ;; Q: Maybe this should inherit from CELL-ERROR??
   ((object :initarg :object :reader slot-error-object)
    (slot-name :initarg :slot-name :reader slot-error-name)

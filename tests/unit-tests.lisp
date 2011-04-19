@@ -1,8 +1,8 @@
-(in-package :rucksack-test)
+(in-package :knapsack-test)
 
 ;; You can run all basic unit tests with:
 ;;
-;;   (in-package :rucksack-test)
+;;   (in-package :knapsack-test)
 ;;   (run-tests)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -10,26 +10,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; In many of the tests, I use multiple with-transaction forms.  This is to
-;; force the opening and closing of the test rucksack, and hopefully ensure 
+;; force the opening and closing of the test knapsack, and hopefully ensure 
 ;; that we are actually persisting data.
 
-(defparameter *rucksack-unit-tests* #p"/tmp/rucksack-unit-tests/")
+(defparameter *knapsack-unit-tests* #p"/tmp/knapsack-unit-tests/")
 
-(defmacro with-rucksack-and-transaction ((&key (if-exists :overwrite))
+(defmacro with-knapsack-and-transaction ((&key (if-exists :overwrite))
                                          &body body)
-  `(with-rucksack (rs *rucksack-unit-tests* :if-exists ,if-exists)
+  `(with-knapsack (rs *knapsack-unit-tests* :if-exists ,if-exists)
      (with-transaction ()
        ,@body)))
 
 (define-test serialization-basics
-  ;; Test basic serialization of Rucksack
-  (let ((store (merge-pathnames *rucksack-unit-tests* "store")))
-    (rucksack::save-objects (list store) store)
-    (assert-equal (list store) (rucksack::load-objects store))))
+  ;; Test basic serialization of Knapsack
+  (let ((store (merge-pathnames *knapsack-unit-tests* "store")))
+    (knapsack::save-objects (list store) store)
+    (assert-equal (list store) (knapsack::load-objects store))))
 
 (define-test basic-p-cons
-  ;; Basic functions of Rucksack's P-CONS.
-  (with-rucksack-and-transaction ()
+  ;; Basic functions of Knapsack's P-CONS.
+  (with-knapsack-and-transaction ()
     (let ((pc (p-cons 1 2)))
       (assert-true (and (= 1 (p-car pc)) 
                         (= 2 (p-cdr pc))))
@@ -40,8 +40,8 @@
       (assert-true (and (= 3 (p-car pc)) (= 4 (p-cdr pc)))))))
 
 (define-test basic-p-array
-  ;; Basic functions of Rucksack's P-ARRAY.
-  (with-rucksack-and-transaction ()
+  ;; Basic functions of Knapsack's P-ARRAY.
+  (with-knapsack-and-transaction ()
     (let ((array (p-make-array 10)))
       (assert-true (not (null array)))
       (assert-equal (list 10) (p-array-dimensions array))
@@ -56,7 +56,7 @@
 
 (define-test basic-p-list
   ;; Basic persistent list functions.
-  (with-rucksack-and-transaction ()
+  (with-knapsack-and-transaction ()
     (flet ((unwrap (l) (unwrap-persistent-list l)))
       (let ((plist (p-list 0 1 2 3 4 5 6 7 8 9))
 	    (rlist   (list 0 1 2 3 4 5 6 7 8 9)))
@@ -92,22 +92,22 @@
    (cached :initform nil :initarg :cached :accessor cached :persistence nil))
   (:metaclass persistent-class))
 
-(define-test basic-persistence 
-  "Tests basic objects existing over an open/close of a rucksack"
-  (with-rucksack-and-transaction (:if-exists :supersede)
-    (add-rucksack-root (p-cons 1 2) rs)
-    (add-rucksack-root (p-make-array 3 :initial-contents '(1 2 3)) rs)
-    (add-rucksack-root (make-instance 'basic-persist 
+(define-test basic-persistence
+  "Tests basic objects existing over an open/close of a knapsack"
+  (with-knapsack-and-transaction (:if-exists :supersede)
+    (add-knapsack-root (p-cons 1 2) rs)
+    (add-knapsack-root (p-make-array 3 :initial-contents '(1 2 3)) rs)
+    (add-knapsack-root (make-instance 'basic-persist
                                       :data "foo"
                                       :cached t)
                        rs))
-  ;; Reopen the rucksack.
-  (with-rucksack-and-transaction ()
-    (let ((roots (rucksack-roots rs)))
+  ;; Reopen the knapsack.
+  (with-knapsack-and-transaction ()
+    (let ((roots (knapsack-roots rs)))
       (assert-equal 3 (length roots))
       (dolist (r roots)
 	(typecase r
-	  (persistent-cons 
+	  (persistent-cons
 	   (assert-equal (list 1 2) (list (p-car r) (p-cdr r))))
 	  (persistent-array
 	   (assert-equal '(3) (p-array-dimensions r))
@@ -119,30 +119,28 @@
 	   (assert-equal "foo" (data r))
 	   (assert-error 'unbound-slot (cached r))))))))
 
-
-
 (defun make-multiple-instances (class-type data)
   (mapcar (lambda (d) (make-instance class-type :data d))
           data))
 
-(defun find-indexed (rucksack class data)
+(defun find-indexed (knapsack class data)
   (let (result)
-    (rucksack-map-slot rucksack class 'data
+    (knapsack-map-slot knapsack class 'data
 		       (lambda (obj) (setf result obj))
 		       :equal data)
     result))
 
-(defun delete-object (rucksack class data)
-  (rucksack::rucksack-delete-object rucksack (find-indexed rucksack class data)))
+(defun delete-object (knapsack class data)
+  (knapsack::knapsack-delete-object knapsack (find-indexed knapsack class data)))
 
-(defun ensure-exists (rucksack class data)
+(defun ensure-exists (knapsack class data)
   (every (lambda (d)
-	   (find-indexed rucksack class d))
+	   (find-indexed knapsack class d))
 	 data))
 
-(defun count-instances (rucksack class)
+(defun count-instances (knapsack class)
   (let ((count 0))
-    (rucksack-map-class rucksack class
+    (knapsack-map-class knapsack class
 			(lambda (obj)
 			  (declare (ignore obj))
 			  (incf count)))
@@ -170,11 +168,11 @@
 
 
 (define-test indexed-persistence
-  ;; Open a clean rucksack.
-  (with-rucksack-and-transaction (:if-exists :supersede)
+  ;; Open a clean knapsack.
+  (with-knapsack-and-transaction (:if-exists :supersede)
     (make-indexed-test-instances))
-  ;; Close the rucksack, reopen below.
-  (with-rucksack-and-transaction ()
+  ;; Close the knapsack, reopen below.
+  (with-knapsack-and-transaction ()
     (assert-true (ensure-exists rs 'number-index '(1 2 3 4)))
     (assert-false (ensure-exists rs 'number-index '(5)))
     
@@ -196,21 +194,21 @@
 
 
 (define-test basic-deletion
-  (with-rucksack-and-transaction (:if-exists :supersede)
+  (with-knapsack-and-transaction (:if-exists :supersede)
     (dotimes (x 4)
-      (add-rucksack-root (p-cons x x) rs)))
-  (with-rucksack-and-transaction ()
-    (let ((roots (rucksack-roots rs)))
+      (add-knapsack-root (p-cons x x) rs)))
+  (with-knapsack-and-transaction ()
+    (let ((roots (knapsack-roots rs)))
       (assert-equal 4 (length roots))
-      (assert-true (rucksack::rucksack-root-p (car roots) rs))
-      (rucksack::delete-rucksack-root (car roots) rs)))
-  (with-rucksack-and-transaction ()
-    (assert-equal 3 (length (rucksack-roots rs)))))
+      (assert-true (knapsack::knapsack-root-p (car roots) rs))
+      (knapsack::delete-knapsack-root (car roots) rs)))
+  (with-knapsack-and-transaction ()
+    (assert-equal 3 (length (knapsack-roots rs)))))
 
 (define-test indexed-deletion
-  (with-rucksack-and-transaction (:if-exists :supersede)
+  (with-knapsack-and-transaction (:if-exists :supersede)
     (make-indexed-test-instances))
-  (with-rucksack-and-transaction ()
+  (with-knapsack-and-transaction ()
     (assert-true (find-indexed rs 'number-index 1))
     (delete-object rs 'number-index 1)
     (assert-false (find-indexed rs 'number-index 1))
@@ -234,28 +232,26 @@
 
 
 (define-test basic-rollback
-  (with-rucksack-and-transaction (:if-exists :supersede)
-    (add-rucksack-root (p-cons 1 2) rs))
-  (with-rucksack-and-transaction ()
-    (let ((pc (first (rucksack-roots rs))))
+  (with-knapsack-and-transaction (:if-exists :supersede)
+    (add-knapsack-root (p-cons 1 2) rs))
+  (with-knapsack-and-transaction ()
+    (let ((pc (first (knapsack-roots rs))))
       (setf (p-car pc) 4)
       ;; Abort the transaction.  WITH-TRANSACTION will take care of
       ;; calling TRANSACTION-ROLLBACK.
       (abort)))
-  (with-rucksack-and-transaction ()
-    (let ((pc (car (rucksack-roots rs))))
+  (with-knapsack-and-transaction ()
+    (let ((pc (car (knapsack-roots rs))))
       (assert-equal 1 (p-car pc))))
   ;; Test that transactions are also rolled back when we throw an
   ;; error inside the body of a WITH-TRANSACTION form.
   (assert-error 'error
-                (with-rucksack-and-transaction ()
-                  (let ((pc (first (rucksack-roots rs))))
+                (with-knapsack-and-transaction ()
+                  (let ((pc (first (knapsack-roots rs))))
                     (setf (p-car pc) 5)
                     ;; Abort the transaction by causing an error.
                     (error "Something went wrong"))))
-  (with-rucksack-and-transaction ()
+  (with-knapsack-and-transaction ()
     ;; Verify that the error caused a transaction rollback.
-    (let ((pc (car (rucksack-roots rs))))
+    (let ((pc (car (knapsack-roots rs))))
       (assert-equal 1 (p-car pc)))))
-
-

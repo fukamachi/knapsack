@@ -1,6 +1,13 @@
-;; $Id: mop.lisp,v 1.13 2007/01/20 18:17:55 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; MOP Magic
@@ -179,15 +186,15 @@ and a list of changed (according to SLOT-DEFINITION-EQUAL) slots."
 
 (defun update-indexes (class)
   ;; Update class and slot indexes.
-  (when (fboundp 'current-rucksack)
-    ;; This function is also called during compilation of Rucksack
+  (when (fboundp 'current-knapsack)
+    ;; This function is also called during compilation of Knapsack
     ;; (when the class definition of PERSISTENT-OBJECT is compiled).
-    ;; At that stage the CURRENT-RUCKSACK function isn't even defined
+    ;; At that stage the CURRENT-KNAPSACK function isn't even defined
     ;; yet, so we shouldn't call it.
-    (let ((rucksack (current-rucksack)))
-      (when rucksack
-        (rucksack-update-class-index rucksack class)
-        (rucksack-update-slot-indexes rucksack class)))))
+    (let ((knapsack (current-knapsack)))
+      (when knapsack
+        (knapsack-update-class-index knapsack class)
+        (knapsack-update-slot-indexes knapsack class)))))
 
 
 (defmethod finalize-inheritance :after ((class persistent-class))
@@ -198,10 +205,10 @@ and a list of changed (according to SLOT-DEFINITION-EQUAL) slots."
   (setf (class-persistent-slots class)
         (remove-if-not #'slot-persistence (class-slots class)))
   ;; Update schemas if necessary.
-  (when (fboundp 'current-rucksack) ; see comment for UPDATE-INDEXES
-    (let ((rucksack (current-rucksack)))
-      (when rucksack
-        (maybe-update-schemas (schema-table (rucksack-cache rucksack))
+  (when (fboundp 'current-knapsack) ; see comment for UPDATE-INDEXES
+    (let ((knapsack (current-knapsack)))
+      (when knapsack
+        (maybe-update-schemas (schema-table (knapsack-cache knapsack))
                               class))))
   ;;
   (setf (class-changed-p class) nil))
@@ -263,4 +270,3 @@ and a list of changed (according to SLOT-DEFINITION-EQUAL) slots."
      
     ;; Return the effective slot definition.
     effective-slotdef))
- 

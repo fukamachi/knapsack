@@ -1,33 +1,13 @@
-;; $Id: serialize.lisp,v 1.10 2007/01/22 10:23:14 alemmens Exp $
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Serialize
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 #|
-This is a modified version of my stand-alone serialization library.
-The most important modification is that we don't keep track of any
-shared objects (like CLOS objects, symbols, struct classes) anymore.
-That's supposed to be handled by the database library on top of this.
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-This file also contains the garbage collection code for scanning objects,
-because that's very similar to deserializing them.
-
-What do we do when we serialize an object and it turns out to contain
-other objects?  There are a few options:
-1. Don't allow it: this should be dealt with at a higher level
-2. Automatically add the child object to the cache: that means it
-   will be saved and we'll get an object-id for the child.  But what if
-   the child was already in the cache?  We have no way of knowing that
-   and we'll probably create a mess.
-3. Just serialize the contents.  This basically assumes that this is the
-   only reference to this objects; or, if it isn't, that it doesn't matter
-   if we create more than one copy of this object when we deserialize
-   it (and that object identity is irrelevant).
-I think I'll go for option 3.
+  For the full copyright and license information, please see the LICENSE.
 |#
 
-(in-package :rucksack)
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -133,7 +113,7 @@ fixed width fields.")
 (defconstant +character-24+ #x33)
 (defconstant +character-32+ #x34)
 
-(defconstant +base-char+     #x35)  ; used as element-type marker for strings   
+(defconstant +base-char+     #x35)  ; used as element-type marker for strings
 (defconstant +extended-char+ #x36)  ; used as element-type marker for strings
 
 (defconstant +string+           #x40)
@@ -164,7 +144,7 @@ fixed width fields.")
 (defconstant +struct-definition+ #x63)
 (defconstant +dotted-list+       #x64)
 
-;; Objects and slots 
+;; Objects and slots
 
 (defconstant +object+                   #x70)
 (defconstant +unbound-slot+             #x71)
@@ -644,7 +624,7 @@ elements of the list."
 #|
 For more efficient ways of serializing floats, we may want to use
 something like the following (from Pascal Bourguignon on comp.lang.lisp).
- 
+
 (defmacro gen-ieee-encoding (name type exponent-bits mantissa-bits)
   ;; Thanks to ivan4th (~ivan_iv@nat-msk-01.ti.ru) for correcting an off-by-1
   `(progn
@@ -675,8 +655,7 @@ something like the following (from Pascal Bourguignon on comp.lang.lisp).
 (gen-ieee-encoding float-32 'single-float  8 24)
 (gen-ieee-encoding float-64 'double-float 11 53)
 |#
- 
- 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Complexes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -699,7 +678,7 @@ something like the following (from Pascal Bourguignon on comp.lang.lisp).
 
 ;; DO: Implement serializing of circular lists.
 
-(defun analyze-list (x)  
+(defun analyze-list (x)
   "Returns two values.  The first value is one of :PROPER-LIST,
 :DOTTED-LIST or :CIRCULAR-LIST.  The second value is the length of
 the list.  For dotted lists, the final item is included in the
@@ -740,7 +719,6 @@ length; for circular lists, the length is NIL."
       (setf (cdr circular-list) circular-list)
       (check circular-list :circular-list nil)))
   'OK)
- 
 
 (defmethod serialize ((cons cons) stream)
   (multiple-value-bind (list-type length)
@@ -1135,8 +1113,8 @@ implementation-dependent attributes."
 ;;; Structures
 ;;;
 ;;; Can't be serialized portably.  The version below works for SBCL at the
-;;; moment, but using structures in Rucksack is risky: if a structure 
-;;; definition changes, Rucksack won't know about it and you'll probably
+;;; moment, but using structures in Knapsack is risky: if a structure 
+;;; definition changes, Knapsack won't know about it and you'll probably
 ;;; run into big problems.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1247,7 +1225,6 @@ implementation-dependent attributes."
     (let ((total-size (reduce #'* dimensions)))
       (loop repeat total-size
             do (scan stream gc)))))
-    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Pathnames
@@ -1353,8 +1330,6 @@ implementation-dependent attributes."
 (defmethod deserialize-contents ((marker (eql +reserved-object+)) stream)
   (declare (ignore stream))
   :reserved)
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

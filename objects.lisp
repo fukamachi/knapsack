@@ -1,12 +1,19 @@
-;; $Id: objects.lisp,v 1.22 2008/02/19 22:44:06 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
 
-(defvar *rucksack* nil
-  "The current rucksack (NIL if there is no open rucksack).")
+(in-package :knapsack)
 
-(defun current-rucksack ()
-  *rucksack*)
+(defvar *knapsack* nil
+  "The current knapsack (NIL if there is no open knapsack).")
+
+(defun current-knapsack ()
+  *knapsack*)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Persistent objects API
@@ -46,8 +53,6 @@ p-replace
 p-position
 |#
 
-
-
 (defmethod p-eql (a b)
   ;; Default method.
   (eql a b))
@@ -59,7 +64,7 @@ p-position
 
 (defclass proxy ()
   ((object-id :initarg :object-id :reader object-id)
-   (rucksack :initform (current-rucksack) :initarg :rucksack :reader rucksack))
+   (knapsack :initform (current-knapsack) :initarg :knapsack :reader knapsack))
   (:documentation "Proxies are some kind of in-memory forwarding pointer
 to data in the cache.  They are never saved on disk."))
 
@@ -75,9 +80,9 @@ to data in the cache.  They are never saved on disk."))
   object)
 
 (defun cache (object)
-  (and (slot-boundp object 'rucksack)
-       (rucksack object)
-       (rucksack-cache (rucksack object))))
+  (and (slot-boundp object 'knapsack)
+       (knapsack object)
+       (knapsack-cache (knapsack object))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Low level persistent data structures.
@@ -86,7 +91,7 @@ to data in the cache.  They are never saved on disk."))
 (defclass persistent-data ()
   ((object-id :initarg :object-id :reader object-id)
    (transaction-id :reader transaction-id)
-   (rucksack :initarg :rucksack :initform (current-rucksack) :reader rucksack)
+   (knapsack :initarg :knapsack :initform (current-knapsack) :reader knapsack)
    (contents :initarg :contents :accessor contents))
   (:documentation
  "PERSISTENT-DATA classes do not have PERSISTENT-CLASS as metaclass
@@ -107,7 +112,6 @@ functions like P-CAR instead."))
   ;; one persistent slot: the CONTENTS slot.
   '(contents))
 
-  
 (defmethod p-eql ((a persistent-data) (b persistent-data))
   (= (object-id a) (object-id b)))
 
@@ -124,11 +128,11 @@ functions like P-CAR instead."))
   value)
 
 (defun make-persistent-data (class contents
-                                   &optional (rucksack (current-rucksack)))
+                                   &optional (knapsack (current-knapsack)))
   (let ((object (make-instance class
                                :contents contents
-                               :rucksack rucksack))
-        (cache (and rucksack (rucksack-cache rucksack))))
+                               :knapsack knapsack))
+        (cache (and knapsack (knapsack-cache knapsack))))
     (when cache
       (let ((object-id (cache-create-object object cache)))
         ;; Q: What about the transaction-id slot?
@@ -495,9 +499,9 @@ modified persistent list. ITEM is evaluated before place."
   ((object-id :initarg :object-id :reader object-id
               :persistence nil :index nil)
    (transaction-id :reader transaction-id :persistence nil :index nil)
-   (rucksack :initarg :rucksack :reader rucksack :persistence nil :index nil))
+   (knapsack :initarg :knapsack :reader knapsack :persistence nil :index nil))
   (:default-initargs
-   :rucksack *rucksack*)
+   :knapsack *knapsack*)
   (:metaclass persistent-class)
   (:index nil)
   (:documentation "Classes of metaclass PERSISTENT-CLASS automatically
@@ -508,12 +512,12 @@ inherit from this class."))
   ;; A hack to paper over some MOP differences.  Maybe a cleaner way
   ;; to solve this would be to write our own method for SHARED-INITIALIZE,
   ;; as suggested by Pascal Costanza.
-  ;; See emails of 2006-09-03/04 on rucksack-devel@common-lisp.net.
+  ;; See emails of 2006-09-03/04 on knapsack-devel@common-lisp.net.
   nil)
 
 (defmethod initialize-instance :around ((object persistent-object)
                                         &rest args
-                                        &key rucksack
+                                        &key knapsack
                                         ;; The DONT-INDEX argument is used
                                         ;; when creating the indexes themselves
                                         ;; (to prevent infinite recursion).
@@ -522,15 +526,15 @@ inherit from this class."))
   (maybe-update-slot-info (class-of object))
   ;; This happens when persistent-objects are created in memory, not when
   ;; they're loaded from the cache (loading uses ALLOCATE-INSTANCE instead).
-  (let ((rucksack (or rucksack (rucksack object))))
+  (let ((knapsack (or knapsack (knapsack object))))
     (unless (slot-boundp object 'object-id)
       (setf (slot-value object 'object-id)
-	    (cache-create-object object (rucksack-cache rucksack))))
+	    (cache-create-object object (knapsack-cache knapsack))))
     ;; DO: Explain why we don't set the transaction-id slot here.
-    (unless (slot-boundp object 'rucksack)
-      (setf (slot-value object 'rucksack) rucksack))
+    (unless (slot-boundp object 'knapsack)
+      (setf (slot-value object 'knapsack) knapsack))
     (unless dont-index
-      (rucksack-maybe-index-new-object rucksack (class-of object) object)))
+      (knapsack-maybe-index-new-object knapsack (class-of object) object)))
   ;;
   (let (;; Tell (SETF SLOT-VALUE-USING-CLASS), which may be called
         ;; by SHARED-INITIALIZE in some implementations, that we're
@@ -545,7 +549,7 @@ inherit from this class."))
             (let ((slot-name (slot-definition-name slot)))
               (when (and (slot-boundp object slot-name)
                          (slot-persistence slot))
-                (rucksack-maybe-index-changed-slot (or rucksack (rucksack object))
+                (knapsack-maybe-index-changed-slot (or knapsack (knapsack object))
                                                    class object slot
                                                    nil (slot-value object slot-name)
                                                    nil t))))))
@@ -596,10 +600,10 @@ inherit from this class."))
   ;; has changed. The cache will save it when necessary.
   (let ((slot (slot-def-and-name class slot-name-or-def)))
     (if (and (slot-persistence slot)
-             ;; If the RUCKSACK slot isn't bound yet, the object is
+             ;; If the KNAPSACK slot isn't bound yet, the object is
              ;; just being loaded from disk and we don't need to
              ;; do anything special.
-             (slot-boundp object 'rucksack))
+             (slot-boundp object 'knapsack))
         (let* ((old-boundp (slot-boundp-using-class class object slot-name-or-def))
                (old-value
                 (and old-boundp
@@ -608,7 +612,7 @@ inherit from this class."))
           (cache-touch-object object (cache object))
           ;; Update indexes.
           (unless *initializing-instance*
-            (rucksack-maybe-index-changed-slot (rucksack object)
+            (knapsack-maybe-index-changed-slot (knapsack object)
                                                class object slot
                                                old-value new-value
                                                old-boundp t))
@@ -624,17 +628,17 @@ inherit from this class."))
   ;; has changed. Rely on the cache to save it when necessary.
   (let ((slot (slot-def-and-name class slot-name-or-def)))
     (if (and (slot-persistence slot)
-             ;; If the RUCKSACK slot isn't bound yet, the object is
+             ;; If the KNAPSACK slot isn't bound yet, the object is
              ;; just being loaded from disk and we don't need to
              ;; do anything special.
-             (slot-boundp object 'rucksack))
+             (slot-boundp object 'knapsack))
         (let* ((old-boundp (slot-boundp-using-class class object slot-name-or-def))
                (old-value
                 (and old-boundp
                      (slot-value-using-class class object slot-name-or-def)))
                (result (call-next-method)))
           (cache-touch-object object (cache object))
-          (rucksack-maybe-index-changed-slot (rucksack object)
+          (knapsack-maybe-index-changed-slot (knapsack object)
                                              class object slot
                                              old-value nil
                                              old-boundp nil)
@@ -706,13 +710,12 @@ inherit from this class."))
     ;; DO: Handle previous versions if necessary.
     (declare (ignore schema-id transaction-id previous-pointer)) ; later
     (unless (= id object-id)
-      (internal-rucksack-error
+      (internal-knapsack-error
        "Object-id mismatch during GC scan (required: ~D; actual: ~D)."
        object-id id))
     (loop repeat nr-slots
           do (scan block gc))))
 
-  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Loading/updating cached objects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -785,7 +788,7 @@ block containing the object."
            (schema (find-schema-for-id table schema-id))
            (object (allocate-instance (find-class (schema-class-name schema)))))
       (unless (= nr-slots (nr-persistent-slots schema))
-        (internal-rucksack-error
+        (internal-knapsack-error
          "Schema inconsistency (expected ~D slots, got ~D slots)."
          (nr-persistent-slots schema)
          nr-slots))
@@ -801,7 +804,7 @@ block containing the object."
         ;; DO: We should probably initialize the transient slots to their
         ;; initforms here.
         ;; NOTE: The MOP doesn't intercept the (setf slot-value) here,
-        ;; because the rucksack and object-id slots are still unbound.
+        ;; because the knapsack and object-id slots are still unbound.
         (loop for slot-name in (persistent-slot-names schema)
               do (let ((marker (read-next-marker buffer))
                        (old-slot-p (member slot-name discarded-slots)))
@@ -818,7 +821,7 @@ block containing the object."
         ;; Set CACHE, OBJECT-ID and TRANSACTION-ID slots if it's a persistent
         ;; object.
         (when (typep object '(or persistent-object persistent-data))
-          (setf (slot-value object 'rucksack) (current-rucksack)
+          (setf (slot-value object 'knapsack) (current-knapsack)
                 (slot-value object 'object-id) object-id
                 (slot-value object 'transaction-id) (transaction-id transaction)))
         ;; Call UPDATE-PERSISTENT-INSTANCE-FOR-REDEFINED-CLASS if necessary.
@@ -852,7 +855,7 @@ of the object version list)."
                 (return (values buffer id nr-slots schema-id most-recent-p)))
                ((null prev-version)
                 ;; Oh oh.
-                (internal-rucksack-error "Can't find compatible object
+                (internal-knapsack-error "Can't find compatible object
 version for object #~D and transaction ~D."
                                          object-id current-transaction-id))
                (t
@@ -870,7 +873,7 @@ version for object #~D and transaction ~D."
         (nr-slots (deserialize buffer))
         (schema-id (deserialize buffer)))
     (unless (= id object-id)
-      (internal-rucksack-error "Object-id mismatch (required: ~D; actual: ~D)."
+      (internal-knapsack-error "Object-id mismatch (required: ~D; actual: ~D)."
                                object-id id))
     (values id nr-slots schema-id transaction-id prev-version)))
 
@@ -879,10 +882,10 @@ version for object #~D and transaction ~D."
 ;;; Updating persistent instances
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; When a persistent object must be loaded from disk, Rucksack loads the
+;; When a persistent object must be loaded from disk, Knapsack loads the
 ;; schema nr and finds the corresponding schema.  If the schema is obsolete
 ;; (i.e. there is a schema for the same class with a higher version number),
-;; Rucksack calls the generic function UPDATE-PERSISTENT-INSTANCE-FOR-REDEFINED-CLASS
+;; Knapsack calls the generic function UPDATE-PERSISTENT-INSTANCE-FOR-REDEFINED-CLASS
 ;; after calling ALLOCATE-INSTANCE for the current class version.  The generic
 ;; function is very similar to UPDATE-INSTANCE-FOR-REDEFINED-CLASS: it takes a
 ;; list of added slots, a list of deleted slots and a property list containing
@@ -915,8 +918,6 @@ version for object #~D and transaction ~D."
   ;; This method exists for updating in-memory persistent objects
   ;; of which the class definition has changed.
   (declare (ignore initargs)) ; there shouldn't be any, anyway
-  (cache-touch-object object (rucksack-cache (rucksack object)))
+  (cache-touch-object object (knapsack-cache (knapsack object)))
   (update-persistent-instance-for-redefined-class object added-slots
                                                   discarded-slots plist))
-
-

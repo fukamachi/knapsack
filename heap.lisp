@@ -1,6 +1,13 @@
-;; $Id: heap.lisp,v 1.16 2008/01/22 17:02:07 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Heaps: API
@@ -12,8 +19,7 @@
 * open-heap [Function]
 
 * close-heap [Function]
-|# 
-
+|#
 
 (defgeneric heap-stream (heap)
   (:documentation "Returns the heap's stream."))
@@ -67,15 +73,13 @@ If nil, the heap is allowed to expand indefinitely.")
                         :documentation "The number of octets that have been
 allocated by ALLOCATE-BLOCK since the last time that RESET-ALLOCATION-COUNTER
 was called.")))
-                        
-
 
 ;;
 ;; Open/close/initialize
 ;;
 
 (defun open-heap (pathname
-                  &key (class 'heap) rucksack (options '())
+                  &key (class 'heap) knapsack (options '())
                   (if-exists :overwrite) (if-does-not-exist :create))
   (let ((stream (open pathname
                       :element-type '(unsigned-byte 8)
@@ -86,7 +90,7 @@ was called.")))
     (apply #'make-instance
            class
            :stream stream
-           :rucksack rucksack
+           :knapsack knapsack
            options)))
 
 
@@ -598,4 +602,3 @@ list."
                                &key file-position)
   (declare (ignore stream nr-octets file-position))
   (setf (scan-pointer buffer) 0))
-

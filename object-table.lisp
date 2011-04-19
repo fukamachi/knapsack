@@ -1,6 +1,13 @@
-;; $Id: object-table.lisp,v 1.5 2008/02/03 12:32:16 alemmens Exp $
+#|
+  This file is a part of Knapsack package.
+  URL: http://github.com/fukamachi/knapsack
+  Copyright (c) 2006  Arthur Lemmens
+  Copyright (c) 2011  Eitarow Fukamachi <e.arrows@gmail.com>
 
-(in-package :rucksack)
+  For the full copyright and license information, please see the LICENSE.
+|#
+
+(in-package :knapsack)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Object table
@@ -129,4 +136,3 @@ the 'real' heap."))
   "Returns the potential number of objects in an object-table.
 The first potential object-id is number 0."
   (floor (heap-size object-table) (min-block-size object-table)))
-
