@@ -15,22 +15,24 @@
 (defsystem knapsack
   :version "0.1.20"
   :serial t
-  :components ((:file "queue")
-               (:file "package")
-               (:file "errors")
-               (:file "mop")
-               (:file "serialize" )
-               (:file "heap")
-               (:file "object-table")
-               (:file "schema-table")
-               (:file "garbage-collector")
-               (:file "cache")
-               (:file "objects")
-               (:file "p-btrees")
-               (:file "index")
-               (:file "knapsack")
-               (:file "transactions")
-               (:file "import-export"))
+  :components ((:module "src"
+                :serial t
+                :components ((:file "queue")
+                             (:file "package")
+                             (:file "errors")
+                             (:file "mop")
+                             (:file "serialize" )
+                             (:file "heap")
+                             (:file "object-table")
+                             (:file "schema-table")
+                             (:file "garbage-collector")
+                             (:file "cache")
+                             (:file "objects")
+                             (:file "p-btrees")
+                             (:file "index")
+                             (:file "knapsack")
+                             (:file "transactions")
+                             (:file "import-export"))))
   :description "a flexible, light weight, open source persistence library"
   :long-description
   #.(with-open-file (stream (merge-pathnames
