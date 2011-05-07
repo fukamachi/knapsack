@@ -7,17 +7,38 @@
   For the full copyright and license information, please see the LICENSE.
 |#
 
-#-(or allegro lispworks sbcl openmcl)
-  (error "Unsupported implementation: ~A" (lisp-implementation-type))
-
 (defpackage knapsack
   (:nicknames :ks)
 
-   (:use :queue :cl
-    #+allegro :mop
-    #+lispworks :clos
-    #+sbcl :sb-mop
-    #+openmcl :openmcl-mop)
+  (:use :cl
+        :queue)
+
+  (:import-from :closer-mop
+
+                :validate-superclass
+                :direct-slot-definition-class
+                :effective-slot-definition-class
+                :compute-effective-slot-definition
+                :compute-class-precedence-list
+
+                :class-slots
+                :class-direct-slots
+                :class-direct-subclasses
+                :class-precedence-list
+                :finalize-inheritance
+
+                :slot-definition-name
+                :slot-definition-initargs
+                :slot-definition-readers
+                :slot-definition-writers
+                :slot-definition-allocation
+                :slot-definition-type
+                :slot-definition-initfunction
+                :slot-boundp-using-class
+                :slot-value-using-class
+
+                :standard-direct-slot-definition
+                :standard-effective-slot-definition)
 
   (:export
 

@@ -246,7 +246,6 @@ in which it appears."))
 (defun process-unlock (lock)
   (bt:release-lock lock))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; WITH-TRANSACTION
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -696,8 +695,8 @@ in the specified directory."
   (knapsack-add-class-index (current-knapsack) class-designator
                             :errorp errorp))
 
-(defun add-slot-index (class-designator slot index-spec &key (errorp nil))
-  (knapsack-add-slot-index (current-knapsack) class-designator slot index-spec
+(defun add-slot-index (class-designator slot index-spec unique-p &key (errorp nil))
+  (knapsack-add-slot-index (current-knapsack) class-designator slot index-spec unique-p
                            :errorp errorp))
 
 (defun remove-class-index (class-designator &key (errorp nil))

@@ -599,6 +599,6 @@ list."
   buffer)
 
 (defmethod load-buffer :after ((buffer serialization-buffer) stream nr-octets
-                               &key file-position)
-  (declare (ignore stream nr-octets file-position))
+                               &key file-position eof-error-p)
+  (declare (ignore stream nr-octets file-position eof-error-p))
   (setf (scan-pointer buffer) 0))
