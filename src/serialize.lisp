@@ -1106,6 +1106,7 @@ implementation-dependent attributes."
 
 (defmethod scan-contents ((marker (eql +unbound-slot+)) serializer gc)
   ;; Just skip the marker and continue.
+  (declare (ignore serializer gc))
   :do-nothing)
 
 

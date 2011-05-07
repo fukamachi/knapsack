@@ -390,6 +390,7 @@ modified persistent list. ITEM is evaluated before place."
   nil)
 
 (defmethod p-find (value (list (eql nil)) &key &allow-other-keys)
+  (declare (ignore value))
   nil)
 
 (defmethod p-position (value (vector persistent-array)
@@ -523,6 +524,7 @@ inherit from this class."))
                                         ;; (to prevent infinite recursion).
                                         (dont-index nil)
                                         &allow-other-keys)
+  (declare (ignorable args))
   (maybe-update-slot-info (class-of object))
   ;; This happens when persistent-objects are created in memory, not when
   ;; they're loaded from the cache (loading uses ALLOCATE-INSTANCE instead).
@@ -586,6 +588,7 @@ inherit from this class."))
 (defmethod slot-value-using-class :around ((class persistent-class)
                                            object
                                            slot)
+  (declare (ignore object slot))
   (maybe-update-slot-info class)
   ;; Automatically dereference proxies.
   (maybe-dereference-proxy (call-next-method)))
@@ -648,6 +651,7 @@ inherit from this class."))
 
 (defun slot-def-and-name (class slot-name-or-def)
   "Returns (1) slot definition and (2) slot name."
+  (declare (ignorable class))
   #+lispworks(values (find slot-name-or-def (class-slots class)
                            :key #'slot-definition-name)
                      slot-name-or-def)
@@ -898,6 +902,7 @@ version for object #~D and transaction ~D."
    ;; Default method: ignore the discarded slots and initialize added slots
    ;; according to their initforms.  We do this 'by hand' and not by calling
    ;; SHARED-INITIALIZE because slot indexes may need to be updated too.
+   (declare (ignore discarded-slots plist))
    (let ((slots (class-slots (class-of instance))))
      (loop for slot-name in added-slots
            for slot = (find slot-name slots :key #'slot-definition-name)

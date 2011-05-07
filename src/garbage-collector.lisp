@@ -145,6 +145,7 @@ rounded up.)")))
   ;; (This is called just after a (version of an) object has been
   ;; written to the heap.) Mark the object entry dead if the collector
   ;; is in the marking-object-table or scanning phase, and live otherwise.
+  (declare (ignore block))
   (setf (object-info (object-table heap) object-id)
         (case (state heap)
           ((:starting :marking-object-table :scanning)
@@ -167,6 +168,7 @@ rounded up.)")))
   ;; If the GC is ready but the heap must be expanded because the free
   ;; list manager can't find a free block, we know that we should start
   ;; collecting garbage.
+  (declare (ignore block-size))
   (when (eql (state heap) :ready)
     (setf (state heap) :starting)))
 
@@ -400,6 +402,7 @@ collector."
   "Returns true iff the object in the block is alive."
   ;; DO: Some versions of this object may not be reachable anymore.
   ;; Those should be considered dead.
+  (declare (ignore block))
   (member (object-info object-table object-id) '(:reserved :live-object)))
 
 (defun read-block-start (heap position)

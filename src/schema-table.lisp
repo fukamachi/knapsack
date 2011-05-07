@@ -85,6 +85,7 @@ at the next commit.")))
   '(pathname by-name highest-schema-id))
 
 (defmethod load-slots :after ((table schema-table) serializer)
+  (declare (ignore serializer))
   ;; Reconstruct the BY-ID hash table.  This method is called by the
   ;; serializer after an object is deserialized.
   (setf (schema-table-by-id table) (make-hash-table))

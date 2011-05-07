@@ -276,7 +276,7 @@ OBJECT-ID is defined (and returns a unique integer).")
   ;; serialized. This means that you should only specify symbols that
   ;; name a function.  For program-independent databases you should
   ;; only use symbols from the COMMON-LISP or KNAPSACK packages.
-  (declare (ignore initargs))
+  (declare (ignorable initargs))
   (if (and (symbolp key<) (symbolp value=)
            (symbolp key-key) (symbolp value-key))
     (call-next-method)
