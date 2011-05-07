@@ -235,50 +235,16 @@ in which it appears."))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun make-lock (&key (name "lock"))
-  #+allegro
-  (mp:make-process-lock :name name)
-  #+lispworks
-  (mp:make-lock :name name)
-  #+sbcl
-  (sb-thread:make-mutex :name name)
-  #+openmcl
-  (ccl:make-lock name)
-  #-(or allegro lispworks sbcl openmcl)
-  (not-implemented 'make-lock))
-
+  (bt:make-lock name))
 
 (defmacro with-lock ((lock) &body body)
-  #+allegro
-  `(mp:with-process-lock (,lock) ,@body)
-  #+lispworks
-  `(mp:with-lock (,lock) ,@body)
-  #+sbcl
-  `(sb-thread:with-mutex (,lock) ,@body)
-  #+openmcl
-  `(ccl:with-lock-grabbed (,lock) ,@body)
-  #-(or allegro lispworks sbcl openmcl)
-  (not-implemented 'with-lock))
+  `(bt:with-lock-held (,lock) ,@body))
 
 (defun process-lock (lock)
-  #+lispworks
-  (mp:process-lock lock)
-  #+sbcl
-  (sb-thread:get-mutex lock)
-  #+openmcl
-  (ccl:try-lock lock)
-  #-(or sbcl lispworks openmcl)
-  (not-implemented 'process-lock))
-
+  (bt:acquire-lock lock))
 
 (defun process-unlock (lock)
-  #+lispworks
-  (mp:process-unlock lock)
-  #+sbcl
-  (sb-thread:release-mutex lock)
-  #+openmcl
-  (ccl:release-lock lock)
-  #-(or sbcl lispworks openmcl)
-  (not-implemented 'process-unlock))
+  (bt:release-lock lock))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

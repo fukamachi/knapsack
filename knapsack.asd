@@ -15,6 +15,7 @@
 (defsystem knapsack
   :version "0.1.20"
   :serial t
+  :depends-on (:bordeaux-threads)
   :components ((:module "src"
                 :serial t
                 :components ((:file "queue")
